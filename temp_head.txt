@@ -1,0 +1,13 @@
+﻿import * as THREE from "three";
+
+const STATE = {
+  MENU: "menu",
+  READY: "ready",
+  RACING: "racing",
+  FINISHED: "finished",
+};
+
+const FIXED_DT = 1 / 120;
+const GRAVITY = 32;
+const BIKE_CLEARANCE = 1.02;
+const PLAYER_N

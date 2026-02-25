@@ -1,0 +1,699 @@
+{
+  "pass": true,
+  "checkedAt": "2026-02-25T01:16:58.930Z",
+  "threshold": {
+    "blockedSampleMaxRatio": 0.04,
+    "freeCamRouteOcclusionMaxRatio": 0.06,
+    "freeCamDecorOcclusionMaxRatio": 0.2
+  },
+  "reports": [
+    {
+      "levelId": "ring",
+      "pass": true,
+      "issues": [],
+      "gameplay": {
+        "levelId": "ring",
+        "obstacleCount": 1180,
+        "intrusiveTrackObstacles": 0,
+        "likelyAirWalls": 0,
+        "mountainNearTrack": 0,
+        "blockedSamples": 0,
+        "samplePoints": 300,
+        "terrainTriangleCount": 259200,
+        "terrainOversizedFaces": 0,
+        "terrainDegenerateFaces": 0,
+        "terrainMaxEdge": 4.41,
+        "routeMeshCount": 739,
+        "routeShearedMeshes": 0,
+        "routeMaxStretch": 1,
+        "mountainMeshCount": 16,
+        "mountainShearedMeshes": 0,
+        "mountainTriangleCount": 10676,
+        "mountainOversizedFaces": 0,
+        "mountainDegenerateFaces": 0,
+        "mountainShardFaces": 0,
+        "mountainMaxEdge": 5.18,
+        "rampCount": 5,
+        "rampIssueCount": 3,
+        "rampCriticalCount": 0,
+        "rampIssues": [
+          {
+            "map": "ring",
+            "index": 0,
+            "x": 104.73,
+            "z": 261.32,
+            "issues": [
+              "lift +1.71"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "ring",
+            "index": 2,
+            "x": 239.48,
+            "z": -142.58,
+            "issues": [
+              "lift +1.4"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "ring",
+            "index": 3,
+            "x": -87.93,
+            "z": -278.37,
+            "issues": [
+              "lift +0.26"
+            ],
+            "corrected": true,
+            "critical": false
+          }
+        ]
+      },
+      "freeCam": {
+        "levelId": "ring",
+        "samplePoints": 260,
+        "viewsPerSample": 3,
+        "blockedViews": 0,
+        "routeOcclusions": 0,
+        "decorOcclusions": 0,
+        "terrainOcclusions": 0
+      }
+    },
+    {
+      "levelId": "serpent",
+      "pass": true,
+      "issues": [],
+      "gameplay": {
+        "levelId": "serpent",
+        "obstacleCount": 1634,
+        "intrusiveTrackObstacles": 0,
+        "likelyAirWalls": 0,
+        "mountainNearTrack": 0,
+        "blockedSamples": 0,
+        "samplePoints": 300,
+        "terrainTriangleCount": 259200,
+        "terrainOversizedFaces": 0,
+        "terrainDegenerateFaces": 0,
+        "terrainMaxEdge": 3.42,
+        "routeMeshCount": 907,
+        "routeShearedMeshes": 0,
+        "routeMaxStretch": 1,
+        "mountainMeshCount": 98,
+        "mountainShearedMeshes": 0,
+        "mountainTriangleCount": 68936,
+        "mountainOversizedFaces": 0,
+        "mountainDegenerateFaces": 0,
+        "mountainShardFaces": 0,
+        "mountainMaxEdge": 6.95,
+        "rampCount": 5,
+        "rampIssueCount": 4,
+        "rampCriticalCount": 0,
+        "rampIssues": [
+          {
+            "map": "serpent",
+            "index": 0,
+            "x": 148.11,
+            "z": 136.92,
+            "issues": [
+              "lift +2.27"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "serpent",
+            "index": 1,
+            "x": -167.02,
+            "z": -114.23,
+            "issues": [
+              "lift +1.35"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "serpent",
+            "index": 2,
+            "x": 139.12,
+            "z": -365.66,
+            "issues": [
+              "lift +1.02"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "serpent",
+            "index": 4,
+            "x": 154.77,
+            "z": 76.37,
+            "issues": [
+              "lift +1.19"
+            ],
+            "corrected": true,
+            "critical": false
+          }
+        ]
+      },
+      "freeCam": {
+        "levelId": "serpent",
+        "samplePoints": 260,
+        "viewsPerSample": 3,
+        "blockedViews": 121,
+        "routeOcclusions": 0,
+        "decorOcclusions": 0,
+        "terrainOcclusions": 121
+      }
+    },
+    {
+      "levelId": "urban8",
+      "pass": true,
+      "issues": [],
+      "gameplay": {
+        "levelId": "urban8",
+        "obstacleCount": 1188,
+        "intrusiveTrackObstacles": 0,
+        "likelyAirWalls": 0,
+        "mountainNearTrack": 0,
+        "blockedSamples": 0,
+        "samplePoints": 300,
+        "terrainTriangleCount": 259200,
+        "terrainOversizedFaces": 0,
+        "terrainDegenerateFaces": 0,
+        "terrainMaxEdge": 4.48,
+        "routeMeshCount": 108,
+        "routeShearedMeshes": 0,
+        "routeMaxStretch": 1,
+        "mountainMeshCount": 0,
+        "mountainShearedMeshes": 0,
+        "mountainTriangleCount": 0,
+        "mountainOversizedFaces": 0,
+        "mountainDegenerateFaces": 0,
+        "mountainShardFaces": 0,
+        "mountainMaxEdge": 0,
+        "rampCount": 3,
+        "rampIssueCount": 3,
+        "rampCriticalCount": 0,
+        "rampIssues": [
+          {
+            "map": "urban8",
+            "index": 0,
+            "x": 200.96,
+            "z": 299.99,
+            "issues": [
+              "lift +0.3"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "urban8",
+            "index": 1,
+            "x": 88.52,
+            "z": -301.99,
+            "issues": [
+              "lift +0.59"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "urban8",
+            "index": 2,
+            "x": -342.23,
+            "z": -14.71,
+            "issues": [
+              "lift +0.65"
+            ],
+            "corrected": true,
+            "critical": false
+          }
+        ]
+      },
+      "freeCam": {
+        "levelId": "urban8",
+        "samplePoints": 260,
+        "viewsPerSample": 3,
+        "blockedViews": 0,
+        "routeOcclusions": 0,
+        "decorOcclusions": 0,
+        "terrainOcclusions": 0
+      }
+    },
+    {
+      "levelId": "harbor",
+      "pass": true,
+      "issues": [],
+      "gameplay": {
+        "levelId": "harbor",
+        "obstacleCount": 1022,
+        "intrusiveTrackObstacles": 0,
+        "likelyAirWalls": 0,
+        "mountainNearTrack": 0,
+        "blockedSamples": 1,
+        "samplePoints": 300,
+        "terrainTriangleCount": 269200,
+        "terrainOversizedFaces": 0,
+        "terrainDegenerateFaces": 0,
+        "terrainMaxEdge": 22.63,
+        "routeMeshCount": 1142,
+        "routeShearedMeshes": 0,
+        "routeMaxStretch": 1,
+        "mountainMeshCount": 0,
+        "mountainShearedMeshes": 0,
+        "mountainTriangleCount": 0,
+        "mountainOversizedFaces": 0,
+        "mountainDegenerateFaces": 0,
+        "mountainShardFaces": 0,
+        "mountainMaxEdge": 0,
+        "rampCount": 4,
+        "rampIssueCount": 4,
+        "rampCriticalCount": 0,
+        "rampIssues": [
+          {
+            "map": "harbor",
+            "index": 0,
+            "x": 109.03,
+            "z": 287.39,
+            "issues": [
+              "lift +0.35"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "harbor",
+            "index": 1,
+            "x": 378.02,
+            "z": 35.35,
+            "issues": [
+              "lift +0.38"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "harbor",
+            "index": 2,
+            "x": -138.54,
+            "z": -271.45,
+            "issues": [
+              "lift +1.92"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "harbor",
+            "index": 3,
+            "x": -101.5,
+            "z": 101.85,
+            "issues": [
+              "lift +0.52"
+            ],
+            "corrected": true,
+            "critical": false
+          }
+        ]
+      },
+      "freeCam": {
+        "levelId": "harbor",
+        "samplePoints": 260,
+        "viewsPerSample": 3,
+        "blockedViews": 11,
+        "routeOcclusions": 0,
+        "decorOcclusions": 0,
+        "terrainOcclusions": 11
+      }
+    },
+    {
+      "levelId": "alpine",
+      "pass": true,
+      "issues": [],
+      "gameplay": {
+        "levelId": "alpine",
+        "obstacleCount": 1785,
+        "intrusiveTrackObstacles": 0,
+        "likelyAirWalls": 0,
+        "mountainNearTrack": 0,
+        "blockedSamples": 0,
+        "samplePoints": 300,
+        "terrainTriangleCount": 259200,
+        "terrainOversizedFaces": 0,
+        "terrainDegenerateFaces": 0,
+        "terrainMaxEdge": 6.98,
+        "routeMeshCount": 843,
+        "routeShearedMeshes": 0,
+        "routeMaxStretch": 1,
+        "mountainMeshCount": 70,
+        "mountainShearedMeshes": 0,
+        "mountainTriangleCount": 46578,
+        "mountainOversizedFaces": 0,
+        "mountainDegenerateFaces": 0,
+        "mountainShardFaces": 0,
+        "mountainMaxEdge": 11.35,
+        "rampCount": 5,
+        "rampIssueCount": 4,
+        "rampCriticalCount": 0,
+        "rampIssues": [
+          {
+            "map": "alpine",
+            "index": 0,
+            "x": 86.96,
+            "z": 299.67,
+            "issues": [
+              "lift +1.28"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "alpine",
+            "index": 1,
+            "x": -108.16,
+            "z": 49.23,
+            "issues": [
+              "lift +0.65"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "alpine",
+            "index": 3,
+            "x": -200.86,
+            "z": -382.97,
+            "issues": [
+              "lift +1.13"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "alpine",
+            "index": 4,
+            "x": -262.94,
+            "z": -508.45,
+            "issues": [
+              "lift +1.45"
+            ],
+            "corrected": true,
+            "critical": false
+          }
+        ]
+      },
+      "freeCam": {
+        "levelId": "alpine",
+        "samplePoints": 260,
+        "viewsPerSample": 3,
+        "blockedViews": 53,
+        "routeOcclusions": 3,
+        "decorOcclusions": 0,
+        "terrainOcclusions": 50
+      }
+    },
+    {
+      "levelId": "lava",
+      "pass": true,
+      "issues": [],
+      "gameplay": {
+        "levelId": "lava",
+        "obstacleCount": 2224,
+        "intrusiveTrackObstacles": 0,
+        "likelyAirWalls": 0,
+        "mountainNearTrack": 0,
+        "blockedSamples": 0,
+        "samplePoints": 300,
+        "terrainTriangleCount": 259200,
+        "terrainOversizedFaces": 0,
+        "terrainDegenerateFaces": 0,
+        "terrainMaxEdge": 6.86,
+        "routeMeshCount": 1150,
+        "routeShearedMeshes": 0,
+        "routeMaxStretch": 1,
+        "mountainMeshCount": 91,
+        "mountainShearedMeshes": 0,
+        "mountainTriangleCount": 60808,
+        "mountainOversizedFaces": 0,
+        "mountainDegenerateFaces": 0,
+        "mountainShardFaces": 0,
+        "mountainMaxEdge": 13.04,
+        "rampCount": 5,
+        "rampIssueCount": 3,
+        "rampCriticalCount": 0,
+        "rampIssues": [
+          {
+            "map": "lava",
+            "index": 0,
+            "x": 239.12,
+            "z": 455.61,
+            "issues": [
+              "lift +1.17"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "lava",
+            "index": 2,
+            "x": -415.2,
+            "z": 285.33,
+            "issues": [
+              "lift +0.89"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "lava",
+            "index": 4,
+            "x": 181.79,
+            "z": -184.52,
+            "issues": [
+              "lift +1.81"
+            ],
+            "corrected": true,
+            "critical": false
+          }
+        ]
+      },
+      "freeCam": {
+        "levelId": "lava",
+        "samplePoints": 260,
+        "viewsPerSample": 3,
+        "blockedViews": 15,
+        "routeOcclusions": 0,
+        "decorOcclusions": 0,
+        "terrainOcclusions": 15
+      }
+    },
+    {
+      "levelId": "neon",
+      "pass": true,
+      "issues": [],
+      "gameplay": {
+        "levelId": "neon",
+        "obstacleCount": 2055,
+        "intrusiveTrackObstacles": 0,
+        "likelyAirWalls": 0,
+        "mountainNearTrack": 0,
+        "blockedSamples": 0,
+        "samplePoints": 300,
+        "terrainTriangleCount": 259200,
+        "terrainOversizedFaces": 0,
+        "terrainDegenerateFaces": 0,
+        "terrainMaxEdge": 4.76,
+        "routeMeshCount": 1679,
+        "routeShearedMeshes": 0,
+        "routeMaxStretch": 1,
+        "mountainMeshCount": 61,
+        "mountainShearedMeshes": 0,
+        "mountainTriangleCount": 41642,
+        "mountainOversizedFaces": 0,
+        "mountainDegenerateFaces": 0,
+        "mountainShardFaces": 0,
+        "mountainMaxEdge": 8.26,
+        "rampCount": 6,
+        "rampIssueCount": 6,
+        "rampCriticalCount": 0,
+        "rampIssues": [
+          {
+            "map": "neon",
+            "index": 0,
+            "x": 263.66,
+            "z": 468.31,
+            "issues": [
+              "lift +1.04"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "neon",
+            "index": 1,
+            "x": 502.64,
+            "z": 0,
+            "issues": [
+              "lift +0.8"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "neon",
+            "index": 2,
+            "x": 262.5,
+            "z": -466,
+            "issues": [
+              "lift +1.61"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "neon",
+            "index": 3,
+            "x": -264.23,
+            "z": -469.45,
+            "issues": [
+              "lift +0.81"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "neon",
+            "index": 4,
+            "x": -498.33,
+            "z": 0,
+            "issues": [
+              "lift +1.02"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "neon",
+            "index": 5,
+            "x": -263.59,
+            "z": 468.19,
+            "issues": [
+              "lift +1.15"
+            ],
+            "corrected": true,
+            "critical": false
+          }
+        ]
+      },
+      "freeCam": {
+        "levelId": "neon",
+        "samplePoints": 260,
+        "viewsPerSample": 3,
+        "blockedViews": 0,
+        "routeOcclusions": 0,
+        "decorOcclusions": 0,
+        "terrainOcclusions": 0
+      }
+    },
+    {
+      "levelId": "ruins",
+      "pass": true,
+      "issues": [],
+      "gameplay": {
+        "levelId": "ruins",
+        "obstacleCount": 2214,
+        "intrusiveTrackObstacles": 0,
+        "likelyAirWalls": 0,
+        "mountainNearTrack": 0,
+        "blockedSamples": 0,
+        "samplePoints": 300,
+        "terrainTriangleCount": 259200,
+        "terrainOversizedFaces": 0,
+        "terrainDegenerateFaces": 0,
+        "terrainMaxEdge": 9.39,
+        "routeMeshCount": 858,
+        "routeShearedMeshes": 0,
+        "routeMaxStretch": 1,
+        "mountainMeshCount": 59,
+        "mountainShearedMeshes": 0,
+        "mountainTriangleCount": 38478,
+        "mountainOversizedFaces": 0,
+        "mountainDegenerateFaces": 0,
+        "mountainShardFaces": 0,
+        "mountainMaxEdge": 11.13,
+        "rampCount": 5,
+        "rampIssueCount": 5,
+        "rampCriticalCount": 0,
+        "rampIssues": [
+          {
+            "map": "ruins",
+            "index": 0,
+            "x": 141.76,
+            "z": 180.6,
+            "issues": [
+              "lift +1.55"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "ruins",
+            "index": 1,
+            "x": 22.48,
+            "z": -106.03,
+            "issues": [
+              "lift +0.94"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "ruins",
+            "index": 2,
+            "x": -339.93,
+            "z": 78.11,
+            "issues": [
+              "lift +0.65"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "ruins",
+            "index": 3,
+            "x": -188.65,
+            "z": -245.06,
+            "issues": [
+              "lift +0.62"
+            ],
+            "corrected": true,
+            "critical": false
+          },
+          {
+            "map": "ruins",
+            "index": 4,
+            "x": 161.61,
+            "z": -359.34,
+            "issues": [
+              "lift +1.37"
+            ],
+            "corrected": true,
+            "critical": false
+          }
+        ]
+      },
+      "freeCam": {
+        "levelId": "ruins",
+        "samplePoints": 260,
+        "viewsPerSample": 3,
+        "blockedViews": 54,
+        "routeOcclusions": 13,
+        "decorOcclusions": 0,
+        "terrainOcclusions": 41
+      }
+    }
+  ]
+}
