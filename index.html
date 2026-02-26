@@ -42,7 +42,7 @@
           </div>
 
           <div id="multi-panel" class="mode-panel hidden">
-            <h3>多人模式：注册 / 登录</h3>
+            <h3>多人模式：注册 / 登录 + 匹配大厅</h3>
             <div class="auth-grid">
               <input id="auth-email" type="email" placeholder="邮箱" />
               <input id="auth-nickname" type="text" placeholder="昵称(注册用)" />
@@ -51,8 +51,22 @@
             <div class="menu-actions">
               <button id="register-btn" class="primary-btn" type="button">注册</button>
               <button id="login-btn" class="ghost-btn" type="button">登录</button>
-              <button id="queue-btn" class="ghost-btn" type="button">进入匹配</button>
             </div>
+
+            <div class="lobby-grid">
+              <input id="room-id" type="text" value="lobby" placeholder="房间号（如 room-1）" />
+              <select id="room-map">
+                <option value="ring">环峰禁区 (ring)</option>
+                <option value="serpent">裂脊蛇行 (serpent)</option>
+                <option value="urban8">城市双环立交 (urban8)</option>
+                <option value="harbor">港口巨构 (harbor)</option>
+              </select>
+              <button id="queue-btn" class="ghost-btn" type="button">进入房间</button>
+              <button id="ready-btn" class="ghost-btn" type="button">准备 / 取消准备</button>
+              <button id="start-room-btn" class="ghost-btn" type="button">开始游戏</button>
+              <button id="leave-room-btn" class="ghost-btn" type="button">退出房间</button>
+            </div>
+            <div id="room-state" class="result-list"></div>
             <p id="auth-status" class="hint"></p>
           </div>
 

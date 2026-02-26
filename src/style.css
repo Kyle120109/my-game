@@ -725,3 +725,20 @@ canvas {
   color: var(--text);
   padding: 8px 10px;
 }
+
+.lobby-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.lobby-grid input,
+.lobby-grid select {
+  pointer-events: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--text);
+  padding: 8px 10px;
+}

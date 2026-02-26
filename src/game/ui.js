@@ -69,6 +69,12 @@ export function collectUi() {
     registerBtn: document.getElementById("register-btn"),
     loginBtn: document.getElementById("login-btn"),
     queueBtn: document.getElementById("queue-btn"),
+    readyBtn: document.getElementById("ready-btn"),
+    startRoomBtn: document.getElementById("start-room-btn"),
+    leaveRoomBtn: document.getElementById("leave-room-btn"),
+    roomIdInput: document.getElementById("room-id"),
+    roomMapSelect: document.getElementById("room-map"),
+    roomState: document.getElementById("room-state"),
     authStatus: document.getElementById("auth-status"),
     lbMapCode: document.getElementById("lb-map-code"),
     lbRefreshBtn: document.getElementById("lb-refresh-btn"),
@@ -126,8 +132,17 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     loading: false,
     menuVisibleAt: 0,
     menuMode: "single",
-    authToken: localStorage.getItem("bike_auth_token") || "", 
+    authToken: localStorage.getItem("bike_auth_token") || "",
     pvpSocket: null,
+    lobby: {
+      connected: false,
+      roomId: "lobby",
+      mapId: "ring",
+      meId: null,
+      players: [],
+      ready: {},
+      hostId: null,
+    },
     lastBlastLevelId: null,
     titleBlastTimer: null,
     titleBlastLoopTimer: null,
@@ -359,6 +374,27 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     }
   }
 
+  function renderRoomState() {
+    if (!ui.roomState) return;
+    const l = uiState.lobby;
+    const players = l.players || [];
+    if (!l.connected) {
+      ui.roomState.innerHTML = "<div class='result-row'><span class='name'>未连接房间</span></div>";
+      return;
+    }
+    ui.roomState.innerHTML = [
+      `<div class="result-row"><span class="name">房间：${l.roomId}</span><span class="time">地图：${l.mapId}</span></div>`,
+      `<div class="result-row"><span class="name">人数：${players.length}</span><span class="time">房主：${l.hostId || "-"}</span></div>`,
+      ...players.map((p, idx) => `<div class="result-row"><span class="pos">#${idx + 1}</span><span class="name">${p.nickname || p.id}${p.id===l.meId?" (你)":""}</span><span class="time">${l.ready?.[p.id] ? "已准备" : "未准备"}</span></div>`),
+    ].join("");
+  }
+
+  function sendLobby(type, payload = {}) {
+    const ws = uiState.pvpSocket;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify({ type, ...payload }));
+  }
+
   function setupUi(applySettings) {
     uiState.applySettingsNow = applySettings;
 
@@ -434,30 +470,94 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
           uiState.pvpSocket.close();
           uiState.pvpSocket = null;
         }
+        const roomId = ui.roomIdInput?.value?.trim() || "lobby";
+        const mapId = ui.roomMapSelect?.value || "ring";
         const wsProto = apiBase.startsWith("https") ? "wss" : "ws";
         const wsBase = apiBase.replace(/^https?/, wsProto);
-        const ws = new WebSocket(`${wsBase}/pvp/queue?token=${encodeURIComponent(uiState.authToken)}`);
+        const ws = new WebSocket(`${wsBase}/pvp/queue?token=${encodeURIComponent(uiState.authToken)}&room=${encodeURIComponent(roomId)}`);
         uiState.pvpSocket = ws;
+        uiState.lobby.roomId = roomId;
+        uiState.lobby.mapId = mapId;
+
         ws.onopen = () => {
-          ui.authStatus.textContent = "已进入匹配队列...";
+          uiState.lobby.connected = true;
+          ui.authStatus.textContent = "已进入房间，等待其他玩家...";
+          sendLobby("join_room", { roomId, mapId });
+          renderRoomState();
         };
+
         ws.onmessage = (event) => {
           const msg = JSON.parse(event.data);
-          if (msg.type === "match_found") {
-            ui.authStatus.textContent = `匹配成功：对手 ${msg.opponent?.nickname || "unknown"}`;
-          } else {
-            ui.authStatus.textContent = `事件：${msg.type}`;
+          if (msg.type === "room_state") {
+            uiState.lobby.players = msg.players || [];
+            uiState.lobby.ready = msg.ready || {};
+            uiState.lobby.hostId = msg.hostId || null;
+            uiState.lobby.meId = msg.meId || uiState.lobby.meId;
+            uiState.lobby.mapId = msg.mapId || uiState.lobby.mapId;
+            renderRoomState();
+            return;
           }
+          if (msg.type === "joined") {
+            uiState.lobby.meId = msg.meId || uiState.lobby.meId;
+            ui.authStatus.textContent = `已加入房间：${uiState.lobby.roomId}`;
+            renderRoomState();
+            return;
+          }
+          if (msg.type === "match_found") {
+            ui.authStatus.textContent = "房间人数已满足，可准备并开始";
+            renderRoomState();
+            return;
+          }
+          if (msg.type === "start_game") {
+            ui.authStatus.textContent = "房主已开始游戏，进入地图...";
+            if (msg.mapId) {
+              setSelectedLevelId(msg.mapId);
+              refreshLevelSelection();
+            }
+            Promise.resolve(onStartRace(getSelectedLevelId()));
+            return;
+          }
+          ui.authStatus.textContent = `事件：${msg.type}`;
         };
+
         ws.onerror = () => {
-          ui.authStatus.textContent = "匹配连接失败";
+          ui.authStatus.textContent = "房间连接失败";
+        };
+
+        ws.onclose = () => {
+          uiState.lobby.connected = false;
+          uiState.lobby.players = [];
+          uiState.lobby.ready = {};
+          renderRoomState();
         };
       } catch (err) {
-        ui.authStatus.textContent = `匹配失败：${err.message}`;
+        ui.authStatus.textContent = `进入房间失败：${err.message}`;
       }
     });
 
+    ui.readyBtn?.addEventListener("click", () => {
+      sendLobby("toggle_ready");
+    });
+
+    ui.startRoomBtn?.addEventListener("click", () => {
+      const mapId = ui.roomMapSelect?.value || "ring";
+      sendLobby("start_game", { mapId });
+    });
+
+    ui.leaveRoomBtn?.addEventListener("click", () => {
+      if (uiState.pvpSocket) {
+        uiState.pvpSocket.close();
+        uiState.pvpSocket = null;
+      }
+      uiState.lobby.connected = false;
+      uiState.lobby.players = [];
+      uiState.lobby.ready = {};
+      ui.authStatus.textContent = "已退出房间";
+      renderRoomState();
+    });
+
     switchMenuMode("single");
+    renderRoomState();
 
     ui.startBtn.addEventListener("click", () => {
       if (uiState.loading) return;
