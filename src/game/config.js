@@ -21,7 +21,7 @@ export const SETTINGS = {
   volume: 0.65,
   sensitivity: 1,
   fov: 68,
-  quality: "high",
+  quality: "low",
   shake: true,
   blur: false,
 };
