@@ -521,7 +521,10 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
           }
           if (msg.type === "player_state") {
             if (window.__BIKE_MP_NET__ && msg.from && msg.p) {
-              window.__BIKE_MP_NET__.remoteStates[msg.from] = msg;
+              const prev = window.__BIKE_MP_NET__.remoteStates[msg.from];
+              if (!prev || (msg.t || 0) >= (prev.t || 0)) {
+                window.__BIKE_MP_NET__.remoteStates[msg.from] = msg;
+              }
             }
             return;
           }

@@ -75,6 +75,7 @@ function createGameState() {
       remoteStates: {},
       remoteRacers: {},
       sendTimer: 0,
+      remoteLerp: 0.62,
     },
   };
 }
@@ -506,7 +507,7 @@ F4  退出调试
       if (net) {
         game.multiplayer.sendTimer -= dt;
         if (game.multiplayer.sendTimer <= 0) {
-          game.multiplayer.sendTimer = 0.1;
+          game.multiplayer.sendTimer = 0.05;
           net.send("player_state", {
             roomId: game.multiplayer.roomId,
             p: {
@@ -522,13 +523,21 @@ F4  退出调试
         }
 
         const remoteStates = net.remoteStates || {};
+        const nowMs = Date.now();
         for (const [remoteId, state] of Object.entries(remoteStates)) {
           const racer = game.multiplayer.remoteRacers[remoteId];
           if (!racer || !state?.p) continue;
-          racer.position.x = THREE.MathUtils.lerp(racer.position.x, state.p.x ?? racer.position.x, 0.35);
-          racer.position.y = THREE.MathUtils.lerp(racer.position.y, state.p.y ?? racer.position.y, 0.35);
-          racer.position.z = THREE.MathUtils.lerp(racer.position.z, state.p.z ?? racer.position.z, 0.35);
-          racer.heading = THREE.MathUtils.lerp(racer.heading, state.p.h ?? racer.heading, 0.35);
+
+          const ageSec = Math.min(Math.max(((nowMs - (state.t || nowMs)) / 1000), 0), 0.2);
+          const px = (state.p.x ?? racer.position.x) + (state.p.vx ?? 0) * ageSec;
+          const py = (state.p.y ?? racer.position.y) + (state.p.vy ?? 0) * ageSec;
+          const pz = (state.p.z ?? racer.position.z) + (state.p.vz ?? 0) * ageSec;
+
+          const k = game.multiplayer.remoteLerp;
+          racer.position.x = THREE.MathUtils.lerp(racer.position.x, px, k);
+          racer.position.y = THREE.MathUtils.lerp(racer.position.y, py, k);
+          racer.position.z = THREE.MathUtils.lerp(racer.position.z, pz, k);
+          racer.heading = THREE.MathUtils.lerp(racer.heading, state.p.h ?? racer.heading, k);
           if (typeof state.p.vx === "number") racer.velocity.x = state.p.vx;
           if (typeof state.p.vy === "number") racer.velocity.y = state.p.vy;
           if (typeof state.p.vz === "number") racer.velocity.z = state.p.vz;
