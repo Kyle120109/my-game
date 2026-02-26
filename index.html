@@ -51,10 +51,19 @@
             <div class="menu-actions">
               <button id="register-btn" class="primary-btn" type="button">注册</button>
               <button id="login-btn" class="ghost-btn" type="button">登录</button>
+              <button id="open-match-lobby-btn" class="ghost-btn" type="button">匹配大厅</button>
+            </div>
+
+            <div id="match-lobby-panel" class="settings-panel hidden">
+              <h4>匹配大厅（可加入等待中的房间）</h4>
+              <div class="menu-actions">
+                <button id="rooms-refresh-btn" class="ghost-btn" type="button">刷新房间列表</button>
+              </div>
+              <div id="rooms-list" class="result-list lb-scroll"></div>
             </div>
 
             <div class="lobby-grid">
-              <input id="room-id" type="text" value="lobby" placeholder="房间号（如 room-1）" />
+              <input id="room-id" type="text" value="lobby" placeholder="创建/加入房间号（如 room-1）" />
               <select id="room-map">
                 <option value="ring">环峰禁区 (ring)</option>
                 <option value="serpent">裂脊蛇行 (serpent)</option>

@@ -86,6 +86,10 @@ export function collectUi() {
     authPassword: document.getElementById("auth-password"),
     registerBtn: document.getElementById("register-btn"),
     loginBtn: document.getElementById("login-btn"),
+    openMatchLobbyBtn: document.getElementById("open-match-lobby-btn"),
+    matchLobbyPanel: document.getElementById("match-lobby-panel"),
+    roomsRefreshBtn: document.getElementById("rooms-refresh-btn"),
+    roomsList: document.getElementById("rooms-list"),
     queueBtn: document.getElementById("queue-btn"),
     readyBtn: document.getElementById("ready-btn"),
     startRoomBtn: document.getElementById("start-room-btn"),
@@ -458,6 +462,36 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     }
   }
 
+  async function refreshRoomBrowser() {
+    if (!ui.roomsList) return;
+    ui.roomsList.innerHTML = "加载中...";
+    try {
+      const data = await apiRequest("/pvp/rooms");
+      const rooms = data.rooms || [];
+      if (!rooms.length) {
+        ui.roomsList.innerHTML = "<div class='result-row'><span class='name'>暂无房间</span></div>";
+        return;
+      }
+      ui.roomsList.innerHTML = rooms.map((r) => {
+        const statusText = r.status === "in_game" ? "正在游戏" : "等待中";
+        const btn = r.status === "in_game"
+          ? `<button class='ghost-btn' type='button' disabled>不可进入</button>`
+          : `<button class='ghost-btn room-join-btn' data-room='${r.roomId}' data-map='${r.mapId}' type='button'>加入</button>`;
+        return `<div class='result-row'><span class='name'>${r.roomId} · ${r.mapId} · ${statusText}</span><span class='time'>${r.players}人 ${btn}</span></div>`;
+      }).join("");
+
+      ui.roomsList.querySelectorAll(".room-join-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          ui.roomIdInput.value = btn.dataset.room || "lobby";
+          if (btn.dataset.map) ui.roomMapSelect.value = btn.dataset.map;
+          ui.authStatus.textContent = `已选择房间 ${ui.roomIdInput.value}`;
+        });
+      });
+    } catch (err) {
+      ui.roomsList.innerHTML = `<div class='result-row'><span class='name'>加载失败：${err.message}</span></div>`;
+    }
+  }
+
   function renderRoomState() {
     if (!ui.roomState) return;
     const l = uiState.lobby;
@@ -626,6 +660,17 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     ui.finishSkipBtn?.addEventListener("click", () => {
       if (ui.postFinishAuth) ui.postFinishAuth.classList.add("hidden");
       ui.finishAuthStatus.textContent = "已跳过保存";
+    });
+
+    ui.openMatchLobbyBtn?.addEventListener("click", () => {
+      ui.matchLobbyPanel?.classList.toggle("hidden");
+      if (!ui.matchLobbyPanel?.classList.contains("hidden")) {
+        void refreshRoomBrowser();
+      }
+    });
+
+    ui.roomsRefreshBtn?.addEventListener("click", () => {
+      void refreshRoomBrowser();
     });
 
     ui.queueBtn?.addEventListener("click", () => {
