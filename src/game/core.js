@@ -543,6 +543,20 @@ F4  退出调试
           if (typeof state.p.vz === "number") racer.velocity.z = state.p.vz;
           entities.updateRacerVisual(game, racer, dt);
         }
+
+        const actionQueue = net.remoteActions || [];
+        while (actionQueue.length > 0) {
+          const action = actionQueue.shift();
+          const racer = game.multiplayer.remoteRacers[action?.from];
+          if (!racer) continue;
+          if (action.action === "punch") {
+            racer.punchTimer = Math.max(racer.punchTimer || 0, 0.25);
+          } else if (action.action === "item") {
+            if (modules.fx) {
+              modules.fx.spawnBurst(game, racer.position, 0xffaa44, 10, 1.2, 6.0);
+            }
+          }
+        }
       }
     }
 

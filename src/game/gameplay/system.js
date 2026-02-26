@@ -120,12 +120,19 @@ export function createGameplaySystem({ input, settings, ui, fx, updateRacerVisua
           // 3-second attack ban after countdown ends (uses racingStartTime)
           if (game.state !== STATE.RACING || (game.raceElapsed - game.racingStartTime) >= 3.0) {
             combat.tryPunch(game, racer);
+            if (game.multiplayer?.active && window.__BIKE_MP_NET__) {
+              window.__BIKE_MP_NET__.send("action", { action: "punch" });
+            }
           }
         }
         if (input.itemQueued) {
           input.itemQueued = false;
           if (game.state !== STATE.RACING || (game.raceElapsed - game.racingStartTime) >= 3.0) {
+            const usedType = racer.itemType || "none";
             items.useItem(game, racer);
+            if (game.multiplayer?.active && window.__BIKE_MP_NET__) {
+              window.__BIKE_MP_NET__.send("action", { action: "item", itemType: usedType });
+            }
           }
         }
         if (input.respawnQueued) {

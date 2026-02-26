@@ -485,6 +485,7 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
           window.__BIKE_MP_NET__ = {
             send: (type, payload = {}) => sendLobby(type, payload),
             remoteStates: {},
+            remoteActions: [],
             roomId,
             meId: uiState.lobby.meId,
           };
@@ -526,6 +527,18 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
                 window.__BIKE_MP_NET__.remoteStates[msg.from] = msg;
               }
             }
+            return;
+          }
+          if (msg.type === "action") {
+            if (window.__BIKE_MP_NET__ && msg.from) {
+              window.__BIKE_MP_NET__.remoteActions.push(msg);
+            }
+            return;
+          }
+          if (msg.type === "room_closed") {
+            ui.authStatus.textContent = "房间已自动注销（人数不足），请重新创建/加入房间";
+            uiState.lobby.ready = {};
+            renderRoomState();
             return;
           }
           if (msg.type === "start_game") {
