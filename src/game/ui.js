@@ -1146,11 +1146,6 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     const durationMs = Math.max(1, Math.floor((game.raceFinishedAt || game.raceElapsed) * 1000));
     uiState.lastFinish = { mapCode: game.activeLevel?.id || getSelectedLevelId(), durationMs };
 
-    if (!isSingle) {
-      if (ui.postFinishAuth) ui.postFinishAuth.classList.add("hidden");
-      return;
-    }
-
     if (uiState.authToken) {
       try {
         await submitFinishRecord(uiState.lastFinish.mapCode, uiState.lastFinish.durationMs);
@@ -1158,9 +1153,11 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
         // ignore and let user retry from leaderboard panel
       }
       if (ui.postFinishAuth) ui.postFinishAuth.classList.add("hidden");
-    } else {
+    } else if (isSingle) {
       if (ui.postFinishAuth) ui.postFinishAuth.classList.remove("hidden");
       if (ui.finishAuthStatus) ui.finishAuthStatus.textContent = "游客通关：登录或注册可保存本次成绩";
+    } else {
+      if (ui.postFinishAuth) ui.postFinishAuth.classList.add("hidden");
     }
   }
 

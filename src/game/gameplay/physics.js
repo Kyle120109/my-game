@@ -129,7 +129,7 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
       accel.addScaledVector(tempVec3D, -0.08);
       if (racer.isPlayer && game.state === STATE.RACING) {
         const pitchInput = (input.forward ? 1 : 0) - (input.brake ? 1 : 0);
-        const rollInput = (input.left ? 1 : 0) - (input.right ? 1 : 0);
+        const rollInput = (input.right ? 1 : 0) - (input.left ? 1 : 0);
         racer.airPitch = THREE.MathUtils.clamp(racer.airPitch + pitchInput * dt * 1.9, -0.9, 0.9);
         racer.airRoll = THREE.MathUtils.clamp(racer.airRoll + rollInput * dt * 2.1, -1.15, 1.15);
       }

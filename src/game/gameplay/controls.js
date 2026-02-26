@@ -37,7 +37,7 @@ export function createControlSystem({ input, settings, tempVec3A, tempVec3B, tem
       racer.brake = 0;
     }
 
-    const steerRaw = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+    const steerRaw = (input.left ? 1 : 0) - (input.right ? 1 : 0);
     racer.targetSteer = steerRaw * settings.sensitivity;
     const speed = horizontalSpeed(racer.velocity);
     const look = samplePath(game.activeLevel, racer.progress + 10 + Math.min(speed * 0.42, 16));
