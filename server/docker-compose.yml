@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16
+    container_name: pvz-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pvz
+    ports:
+      - "5432:5432"
+    volumes:
+      - pvz-db-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: pvz-redis
+    ports:
+      - "6379:6379"
+
+  api:
+    build: .
+    container_name: pvz-api
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/pvz?schema=public
+      JWT_SECRET: change-me-in-prod
+      PORT: 3000
+      HOST: 0.0.0.0
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3000:3000"
+
+volumes:
+  pvz-db-data:

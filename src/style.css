@@ -691,3 +691,37 @@ canvas {
     height: 150px;
   }
 }
+
+.mode-actions {
+  flex-wrap: wrap;
+}
+
+.mode-panel {
+  margin-top: 14px;
+}
+
+.mode-panel.hidden {
+  display: none;
+}
+
+.ghost-btn.active,
+.primary-btn.active {
+  outline: 2px solid var(--ice);
+}
+
+.auth-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.auth-grid input,
+#lb-map-code {
+  pointer-events: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--text);
+  padding: 8px 10px;
+}

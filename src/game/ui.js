@@ -55,8 +55,24 @@ export function collectUi() {
     menuHeroTitle: document.getElementById("menu-hero-title"),
     menuHeroLetters: document.getElementById("menu-hero-letters"),
     levelGrid: document.getElementById("level-grid"),
+    singleBtn: document.getElementById("single-btn"),
+    multiBtn: document.getElementById("multi-btn"),
+    leaderboardBtn: document.getElementById("leaderboard-btn"),
     startBtn: document.getElementById("start-btn"),
     settingsBtn: document.getElementById("settings-btn"),
+    singlePanel: document.getElementById("single-panel"),
+    multiPanel: document.getElementById("multi-panel"),
+    leaderboardPanel: document.getElementById("leaderboard-panel"),
+    authEmail: document.getElementById("auth-email"),
+    authNickname: document.getElementById("auth-nickname"),
+    authPassword: document.getElementById("auth-password"),
+    registerBtn: document.getElementById("register-btn"),
+    loginBtn: document.getElementById("login-btn"),
+    queueBtn: document.getElementById("queue-btn"),
+    authStatus: document.getElementById("auth-status"),
+    lbMapCode: document.getElementById("lb-map-code"),
+    lbRefreshBtn: document.getElementById("lb-refresh-btn"),
+    lbList: document.getElementById("lb-list"),
     settingsPanel: document.getElementById("settings-panel"),
     settingVolume: document.getElementById("setting-volume"),
     settingVolumeValue: document.getElementById("setting-volume-value"),
@@ -105,9 +121,13 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
   loadStoredSettings(settings);
 
   const ui = collectUi();
+  const apiBase = (window.__BIKE_API_BASE__ || localStorage.getItem("bike_api_base") || `${location.protocol}//${location.host}`).replace(/\/$/, "");
   const uiState = {
     loading: false,
     menuVisibleAt: 0,
+    menuMode: "single",
+    authToken: localStorage.getItem("bike_auth_token") || "", 
+    pvpSocket: null,
     lastBlastLevelId: null,
     titleBlastTimer: null,
     titleBlastLoopTimer: null,
@@ -298,6 +318,47 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     }
   }
 
+  function switchMenuMode(mode) {
+    uiState.menuMode = mode;
+    ui.singlePanel?.classList.toggle("hidden", mode !== "single");
+    ui.multiPanel?.classList.toggle("hidden", mode !== "multi");
+    ui.leaderboardPanel?.classList.toggle("hidden", mode !== "leaderboard");
+    ui.singleBtn?.classList.toggle("active", mode === "single");
+    ui.multiBtn?.classList.toggle("active", mode === "multi");
+    ui.leaderboardBtn?.classList.toggle("active", mode === "leaderboard");
+  }
+
+  async function apiRequest(path, options = {}) {
+    const headers = new Headers(options.headers || {});
+    if (uiState.authToken) headers.set("authorization", `Bearer ${uiState.authToken}`);
+    const res = await fetch(`${apiBase}${path}`, { ...options, headers });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.message || `HTTP ${res.status}`);
+    return data;
+  }
+
+  async function refreshLeaderboard() {
+    const mapCode = ui.lbMapCode?.value?.trim() || getSelectedLevelId();
+    if (!ui.lbList) return;
+    ui.lbList.innerHTML = "加载中...";
+    try {
+      const data = await apiRequest(`/leaderboard/${encodeURIComponent(mapCode)}?limit=20`);
+      const top = data.top || [];
+      if (!top.length) {
+        ui.lbList.innerHTML = "<div class='result-row'><span class='name'>暂无成绩</span></div>";
+        return;
+      }
+      ui.lbList.innerHTML = top
+        .map((row, idx) => {
+          const nick = row.user?.nickname || row.nickname || row.userId || "unknown";
+          return `<div class="result-row"><span class="pos">#${idx + 1}</span><span class="name">${nick}</span><span class="time">${row.score} / ${row.durationMs}ms</span></div>`;
+        })
+        .join("");
+    } catch (err) {
+      ui.lbList.innerHTML = `<div class='result-row'><span class='name'>加载失败：${err.message}</span></div>`;
+    }
+  }
+
   function setupUi(applySettings) {
     uiState.applySettingsNow = applySettings;
 
@@ -316,6 +377,87 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
       ui.levelGrid.appendChild(card);
     }
     refreshLevelSelection();
+
+    ui.singleBtn?.addEventListener("click", () => switchMenuMode("single"));
+    ui.multiBtn?.addEventListener("click", () => switchMenuMode("multi"));
+    ui.leaderboardBtn?.addEventListener("click", () => {
+      switchMenuMode("leaderboard");
+      void refreshLeaderboard();
+    });
+
+    ui.lbRefreshBtn?.addEventListener("click", () => {
+      void refreshLeaderboard();
+    });
+
+    ui.registerBtn?.addEventListener("click", async () => {
+      try {
+        const email = ui.authEmail?.value?.trim();
+        const nickname = ui.authNickname?.value?.trim();
+        const password = ui.authPassword?.value || "";
+        const data = await apiRequest("/auth/register", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, nickname, password }),
+        });
+        uiState.authToken = data.token || "";
+        localStorage.setItem("bike_auth_token", uiState.authToken);
+        ui.authStatus.textContent = `注册成功：${data.user?.nickname || "OK"}`;
+      } catch (err) {
+        ui.authStatus.textContent = `注册失败：${err.message}`;
+      }
+    });
+
+    ui.loginBtn?.addEventListener("click", async () => {
+      try {
+        const email = ui.authEmail?.value?.trim();
+        const password = ui.authPassword?.value || "";
+        const data = await apiRequest("/auth/login", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        uiState.authToken = data.token || "";
+        localStorage.setItem("bike_auth_token", uiState.authToken);
+        ui.authStatus.textContent = `登录成功：${data.user?.nickname || "OK"}`;
+      } catch (err) {
+        ui.authStatus.textContent = `登录失败：${err.message}`;
+      }
+    });
+
+    ui.queueBtn?.addEventListener("click", () => {
+      if (!uiState.authToken) {
+        ui.authStatus.textContent = "请先登录";
+        return;
+      }
+      try {
+        if (uiState.pvpSocket) {
+          uiState.pvpSocket.close();
+          uiState.pvpSocket = null;
+        }
+        const wsProto = apiBase.startsWith("https") ? "wss" : "ws";
+        const wsBase = apiBase.replace(/^https?/, wsProto);
+        const ws = new WebSocket(`${wsBase}/pvp/queue?token=${encodeURIComponent(uiState.authToken)}`);
+        uiState.pvpSocket = ws;
+        ws.onopen = () => {
+          ui.authStatus.textContent = "已进入匹配队列...";
+        };
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          if (msg.type === "match_found") {
+            ui.authStatus.textContent = `匹配成功：对手 ${msg.opponent?.nickname || "unknown"}`;
+          } else {
+            ui.authStatus.textContent = `事件：${msg.type}`;
+          }
+        };
+        ws.onerror = () => {
+          ui.authStatus.textContent = "匹配连接失败";
+        };
+      } catch (err) {
+        ui.authStatus.textContent = `匹配失败：${err.message}`;
+      }
+    });
+
+    switchMenuMode("single");
 
     ui.startBtn.addEventListener("click", () => {
       if (uiState.loading) return;

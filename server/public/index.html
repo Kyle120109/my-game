@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PVZ Online</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="menu">
+      <h1>PVZ Online</h1>
+      <button class="menu-btn" data-tab="register">注册/登录</button>
+      <button class="menu-btn" data-tab="leaderboard">排行榜</button>
+      <button class="menu-btn" data-tab="play">开始游玩</button>
+    </aside>
+
+    <main class="content">
+      <section id="register" class="tab active">
+        <h2>注册</h2>
+        <div class="form-row"><input id="reg-email" placeholder="邮箱" /></div>
+        <div class="form-row"><input id="reg-nickname" placeholder="昵称" /></div>
+        <div class="form-row"><input id="reg-password" type="password" placeholder="密码" /></div>
+        <button id="register-btn">注册</button>
+
+        <h2>登录</h2>
+        <div class="form-row"><input id="login-email" placeholder="邮箱" /></div>
+        <div class="form-row"><input id="login-password" type="password" placeholder="密码" /></div>
+        <button id="login-btn">登录</button>
+
+        <p id="auth-status" class="status"></p>
+      </section>
+
+      <section id="leaderboard" class="tab">
+        <h2>地图排行榜</h2>
+        <div class="inline">
+          <input id="map-code" placeholder="地图 code（例如 demo-1）" value="demo-1" />
+          <button id="load-board">刷新</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>玩家</th><th>分数</th><th>耗时(ms)</th></tr>
+          </thead>
+          <tbody id="board-body"></tbody>
+        </table>
+      </section>
+
+      <section id="play" class="tab">
+        <h2>游玩（基础在线对战入口）</h2>
+        <p>登录后点击进入匹配。</p>
+        <button id="queue-btn">进入匹配</button>
+        <p id="pvp-status" class="status"></p>
+
+        <h3>提交地图成绩</h3>
+        <div class="form-row"><input id="submit-map" value="demo-1" placeholder="地图 code" /></div>
+        <div class="form-row"><input id="submit-score" value="1000" placeholder="分数" type="number" /></div>
+        <div class="form-row"><input id="submit-duration" value="9999" placeholder="耗时(ms)" type="number" /></div>
+        <button id="submit-score-btn">提交成绩</button>
+      </section>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

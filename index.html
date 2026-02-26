@@ -25,10 +25,43 @@
             <h1>山顶速降对抗赛</h1>
             <p class="desc">8 人混战山地赛道，拳击与道具干扰、复杂地形飞跃、失误复活，顶住压力拿第一。</p>
           </div>
-          <div id="level-grid" class="level-grid"></div>
-          <div class="menu-actions">
-            <button id="start-btn" class="primary-btn" type="button">开始游戏</button>
+          <div class="menu-actions mode-actions">
+            <button id="single-btn" class="primary-btn" type="button">单人游戏</button>
+            <button id="multi-btn" class="ghost-btn" type="button">多人游戏</button>
+            <button id="leaderboard-btn" class="ghost-btn" type="button">排行榜</button>
             <button id="settings-btn" class="ghost-btn" type="button">设置</button>
+          </div>
+
+          <div id="single-panel" class="mode-panel">
+            <h3>单人模式：选择地图</h3>
+            <div id="level-grid" class="level-grid"></div>
+            <div class="menu-actions">
+              <button id="start-btn" class="primary-btn" type="button">开始单人游戏</button>
+            </div>
+          </div>
+
+          <div id="multi-panel" class="mode-panel hidden">
+            <h3>多人模式：注册 / 登录</h3>
+            <div class="auth-grid">
+              <input id="auth-email" type="email" placeholder="邮箱" />
+              <input id="auth-nickname" type="text" placeholder="昵称(注册用)" />
+              <input id="auth-password" type="password" placeholder="密码" />
+            </div>
+            <div class="menu-actions">
+              <button id="register-btn" class="primary-btn" type="button">注册</button>
+              <button id="login-btn" class="ghost-btn" type="button">登录</button>
+              <button id="queue-btn" class="ghost-btn" type="button">进入匹配</button>
+            </div>
+            <p id="auth-status" class="hint"></p>
+          </div>
+
+          <div id="leaderboard-panel" class="mode-panel hidden">
+            <h3>地图排行榜</h3>
+            <div class="menu-actions">
+              <input id="lb-map-code" type="text" value="ring" placeholder="地图ID" />
+              <button id="lb-refresh-btn" class="ghost-btn" type="button">刷新榜单</button>
+            </div>
+            <div id="lb-list" class="result-list"></div>
           </div>
           <div id="settings-panel" class="settings-panel hidden">
             <h3>比赛设置</h3>
