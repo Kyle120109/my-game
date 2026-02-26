@@ -25,6 +25,14 @@ function clampNumber(value, min, max, fallback) {
   return THREE.MathUtils.clamp(num, min, max);
 }
 
+function formatMsHuman(ms) {
+  const total = Math.max(0, Math.floor(Number(ms) || 0));
+  const minutes = Math.floor(total / 60000);
+  const seconds = Math.floor((total % 60000) / 1000);
+  const centi = Math.floor((total % 1000) / 10);
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(centi).padStart(2, "0")}`;
+}
+
 function loadStoredSettings(settings) {
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
@@ -408,7 +416,7 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
           const nick = row.user?.nickname || row.nickname || row.userId || "unknown";
           const ms = row.durationMs ?? row.score ?? 0;
           const mapName = MAP_LABELS[mapCode] || mapCode;
-          return `<div class="result-row"><span class="pos">#${offset + idx + 1}</span><span class="name">${mapName} · ${nick}</span><span class="time">${ms} ms</span></div>`;
+          return `<div class="result-row"><span class="pos">#${offset + idx + 1}</span><span class="name">${mapName} · ${nick}</span><span class="time">${formatMsHuman(ms)}</span></div>`;
         })
         .join("");
     } catch (err) {
@@ -437,7 +445,7 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
       const html = items
         .map((row) => {
           const mapName = MAP_LABELS[row.track] || row.track;
-          return `<div class="result-row"><span class="name">${mapName} · ${row.name}</span><span class="time">${row.bestMs} ms</span></div>`;
+          return `<div class="result-row"><span class="name">${mapName} · ${row.name}</span><span class="time">${formatMsHuman(row.bestMs)}</span></div>`;
         })
         .join("");
       ui.lbAllList.insertAdjacentHTML("beforeend", html);
