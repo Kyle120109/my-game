@@ -1,0 +1,22 @@
+# deps & build
+node_modules/
+dist/
+
+# runtime temp
+*.pid
+*.log
+*.err
+
+# windows
+*.lnk
+.DS_Store
+
+# env/editor
+.env
+.env.*
+.vscode/
+
+# local run files (如果有的话)
+devserver
+preview
+dev
