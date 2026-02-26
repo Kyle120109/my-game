@@ -67,6 +67,15 @@ function createGameState() {
     lastBigAirSoundAt: -99,
 
     audio: createAudioState(),
+    multiplayer: {
+      active: false,
+      roomId: null,
+      meId: null,
+      players: [],
+      remoteStates: {},
+      remoteRacers: {},
+      sendTimer: 0,
+    },
   };
 }
 
@@ -224,6 +233,10 @@ export function bootstrapGame() {
     entities.spawnRacers(game, 7, true);
     game.state = STATE.MENU;
     game.stateBeforePause = STATE.RACING;
+    game.multiplayer.active = false;
+    game.multiplayer.remoteStates = {};
+    game.multiplayer.remoteRacers = {};
+    game.multiplayer.players = [];
     game.countdownTimer = 0;
     game.checkpointAlertTimer = 0;
     game.lastBigAirSoundAt = -99;
@@ -251,8 +264,47 @@ export function bootstrapGame() {
       return;
     }
     world.setupWorld(game, levelId);
-    const count = THREE.MathUtils.randInt(5, 8);
-    entities.spawnRacers(game, count, false);
+
+    const mpStart = window.__BIKE_MP_START__;
+    const isMultiplayer = !!(mpStart && mpStart.active);
+    if (isMultiplayer) {
+      const players = Array.isArray(mpStart.players) ? mpStart.players : [];
+      const count = Math.max(2, players.length || 2);
+      entities.spawnRacers(game, count, false);
+      game.multiplayer.active = true;
+      game.multiplayer.roomId = mpStart.roomId || null;
+      game.multiplayer.meId = mpStart.meId || null;
+      game.multiplayer.players = players;
+      game.multiplayer.remoteStates = {};
+      game.multiplayer.remoteRacers = {};
+      game.multiplayer.sendTimer = 0;
+
+      const remotes = game.racers.filter((r) => !r.isPlayer);
+      const remotePlayers = players.filter((p) => p.id !== game.multiplayer.meId);
+      for (let i = 0; i < remotes.length; i += 1) {
+        const rp = remotePlayers[i];
+        if (!rp) {
+          remotes[i].debugFrozen = true;
+          remotes[i].group.visible = false;
+          continue;
+        }
+        remotes[i].name = rp.nickname || remotes[i].name;
+        remotes[i].networkId = rp.id;
+        remotes[i].debugFrozen = true;
+        remotes[i].group.visible = true;
+        game.multiplayer.remoteRacers[rp.id] = remotes[i];
+      }
+    } else {
+      const count = THREE.MathUtils.randInt(5, 8);
+      entities.spawnRacers(game, count, false);
+      game.multiplayer.active = false;
+      game.multiplayer.roomId = null;
+      game.multiplayer.meId = null;
+      game.multiplayer.players = [];
+      game.multiplayer.remoteStates = {};
+      game.multiplayer.remoteRacers = {};
+      game.multiplayer.sendTimer = 0;
+    }
     game.state = STATE.READY;
     game.stateBeforePause = STATE.RACING;
     game.countdownTimer = 3.2;
@@ -446,6 +498,42 @@ F4  退出调试
       if (game.checkpointAlertTimer > 0) {
         game.checkpointAlertTimer -= dt;
         if (game.checkpointAlertTimer <= 0 && game.state === STATE.RACING) uiSystem.ui.countdown.textContent = "";
+      }
+    }
+
+    if (game.multiplayer.active && game.player) {
+      const net = window.__BIKE_MP_NET__;
+      if (net) {
+        game.multiplayer.sendTimer -= dt;
+        if (game.multiplayer.sendTimer <= 0) {
+          game.multiplayer.sendTimer = 0.1;
+          net.send("player_state", {
+            roomId: game.multiplayer.roomId,
+            p: {
+              x: Number(game.player.position.x.toFixed(3)),
+              y: Number(game.player.position.y.toFixed(3)),
+              z: Number(game.player.position.z.toFixed(3)),
+              h: Number(game.player.heading.toFixed(4)),
+              vx: Number(game.player.velocity.x.toFixed(3)),
+              vy: Number(game.player.velocity.y.toFixed(3)),
+              vz: Number(game.player.velocity.z.toFixed(3)),
+            },
+          });
+        }
+
+        const remoteStates = net.remoteStates || {};
+        for (const [remoteId, state] of Object.entries(remoteStates)) {
+          const racer = game.multiplayer.remoteRacers[remoteId];
+          if (!racer || !state?.p) continue;
+          racer.position.x = THREE.MathUtils.lerp(racer.position.x, state.p.x ?? racer.position.x, 0.35);
+          racer.position.y = THREE.MathUtils.lerp(racer.position.y, state.p.y ?? racer.position.y, 0.35);
+          racer.position.z = THREE.MathUtils.lerp(racer.position.z, state.p.z ?? racer.position.z, 0.35);
+          racer.heading = THREE.MathUtils.lerp(racer.heading, state.p.h ?? racer.heading, 0.35);
+          if (typeof state.p.vx === "number") racer.velocity.x = state.p.vx;
+          if (typeof state.p.vy === "number") racer.velocity.y = state.p.vy;
+          if (typeof state.p.vz === "number") racer.velocity.z = state.p.vz;
+          entities.updateRacerVisual(game, racer, dt);
+        }
       }
     }
 

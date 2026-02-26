@@ -482,6 +482,12 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
         ws.onopen = () => {
           uiState.lobby.connected = true;
           ui.authStatus.textContent = "已进入房间，等待其他玩家...";
+          window.__BIKE_MP_NET__ = {
+            send: (type, payload = {}) => sendLobby(type, payload),
+            remoteStates: {},
+            roomId,
+            meId: uiState.lobby.meId,
+          };
           sendLobby("join_room", { roomId, mapId });
           renderRoomState();
         };
@@ -494,11 +500,16 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
             uiState.lobby.hostId = msg.hostId || null;
             uiState.lobby.meId = msg.meId || uiState.lobby.meId;
             uiState.lobby.mapId = msg.mapId || uiState.lobby.mapId;
+            if (window.__BIKE_MP_NET__) {
+              window.__BIKE_MP_NET__.meId = uiState.lobby.meId;
+              window.__BIKE_MP_NET__.roomId = uiState.lobby.roomId;
+            }
             renderRoomState();
             return;
           }
           if (msg.type === "joined") {
             uiState.lobby.meId = msg.meId || uiState.lobby.meId;
+            if (window.__BIKE_MP_NET__) window.__BIKE_MP_NET__.meId = uiState.lobby.meId;
             ui.authStatus.textContent = `已加入房间：${uiState.lobby.roomId}`;
             renderRoomState();
             return;
@@ -508,12 +519,24 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
             renderRoomState();
             return;
           }
+          if (msg.type === "player_state") {
+            if (window.__BIKE_MP_NET__ && msg.from && msg.p) {
+              window.__BIKE_MP_NET__.remoteStates[msg.from] = msg;
+            }
+            return;
+          }
           if (msg.type === "start_game") {
             ui.authStatus.textContent = "房主已开始游戏，进入地图...";
             if (msg.mapId) {
               setSelectedLevelId(msg.mapId);
               refreshLevelSelection();
             }
+            window.__BIKE_MP_START__ = {
+              active: true,
+              roomId: uiState.lobby.roomId,
+              meId: uiState.lobby.meId,
+              players: msg.players || uiState.lobby.players || [],
+            };
             Promise.resolve(onStartRace(getSelectedLevelId()));
             return;
           }
@@ -528,6 +551,7 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
           uiState.lobby.connected = false;
           uiState.lobby.players = [];
           uiState.lobby.ready = {};
+          window.__BIKE_MP_NET__ = null;
           renderRoomState();
         };
       } catch (err) {
@@ -552,6 +576,8 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
       uiState.lobby.connected = false;
       uiState.lobby.players = [];
       uiState.lobby.ready = {};
+      window.__BIKE_MP_NET__ = null;
+      window.__BIKE_MP_START__ = null;
       ui.authStatus.textContent = "已退出房间";
       renderRoomState();
     });
