@@ -8,6 +8,16 @@ const QUALITY_VALUES = new Set(["low", "medium", "high"]);
 const MENU_BLAST_TEXT = "KYLE WONG'S GAME";
 const MENU_BLAST_SPARK_COUNT = 22;
 const MENU_BLAST_LOOP_MS = 1650;
+const MAP_LABELS = {
+  ring: "环峰禁区",
+  serpent: "裂脊蛇行",
+  urban8: "城市双环立交",
+  harbor: "港口巨构",
+  alpine: "雪岭飞坠",
+  lava: "熔火裂谷",
+  neon: "霓虹疾线",
+  ruins: "遗迹断层",
+};
 
 function clampNumber(value, min, max, fallback) {
   const num = Number(value);
@@ -77,8 +87,12 @@ export function collectUi() {
     roomState: document.getElementById("room-state"),
     authStatus: document.getElementById("auth-status"),
     lbMapCode: document.getElementById("lb-map-code"),
+    lbPrevBtn: document.getElementById("lb-prev-btn"),
+    lbNextBtn: document.getElementById("lb-next-btn"),
+    lbPageInfo: document.getElementById("lb-page-info"),
     lbRefreshBtn: document.getElementById("lb-refresh-btn"),
     lbList: document.getElementById("lb-list"),
+    lbAllList: document.getElementById("lb-all-list"),
     settingsPanel: document.getElementById("settings-panel"),
     settingVolume: document.getElementById("setting-volume"),
     settingVolumeValue: document.getElementById("setting-volume-value"),
@@ -120,6 +134,14 @@ export function collectUi() {
     resultList: document.getElementById("result-list"),
     resultRetryBtn: document.getElementById("result-retry-btn"),
     resultMenuBtn: document.getElementById("result-menu-btn"),
+    postFinishAuth: document.getElementById("post-finish-auth"),
+    finishEmail: document.getElementById("finish-email"),
+    finishNickname: document.getElementById("finish-nickname"),
+    finishPassword: document.getElementById("finish-password"),
+    finishRegisterBtn: document.getElementById("finish-register-btn"),
+    finishLoginBtn: document.getElementById("finish-login-btn"),
+    finishSkipBtn: document.getElementById("finish-skip-btn"),
+    finishAuthStatus: document.getElementById("finish-auth-status"),
   };
 }
 
@@ -134,6 +156,15 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     menuMode: "single",
     authToken: localStorage.getItem("bike_auth_token") || "",
     pvpSocket: null,
+    lastFinish: null,
+    leaderboard: {
+      page: 1,
+      limit: 10,
+      allOffset: 0,
+      allLimit: 25,
+      loadingAll: false,
+      allEnded: false,
+    },
     lobby: {
       connected: false,
       roomId: "lobby",
@@ -359,23 +390,63 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
 
   async function refreshLeaderboard() {
     const mapCode = ui.lbMapCode?.value?.trim() || getSelectedLevelId();
+    const page = Math.max(1, uiState.leaderboard.page);
+    const limit = uiState.leaderboard.limit;
+    const offset = (page - 1) * limit;
     if (!ui.lbList) return;
     ui.lbList.innerHTML = "加载中...";
+    if (ui.lbPageInfo) ui.lbPageInfo.textContent = `第 ${page} 页`;
     try {
-      const data = await apiRequest(`/leaderboard/${encodeURIComponent(mapCode)}?limit=20`);
+      const data = await apiRequest(`/leaderboard/${encodeURIComponent(mapCode)}?limit=${limit}&offset=${offset}`);
       const top = data.top || [];
       if (!top.length) {
-        ui.lbList.innerHTML = "<div class='result-row'><span class='name'>暂无成绩</span></div>";
+        ui.lbList.innerHTML = "<div class='result-row'><span class='name'>该页暂无成绩</span></div>";
         return;
       }
       ui.lbList.innerHTML = top
         .map((row, idx) => {
           const nick = row.user?.nickname || row.nickname || row.userId || "unknown";
-          return `<div class="result-row"><span class="pos">#${idx + 1}</span><span class="name">${nick}</span><span class="time">${row.score} / ${row.durationMs}ms</span></div>`;
+          const ms = row.durationMs ?? row.score ?? 0;
+          const mapName = MAP_LABELS[mapCode] || mapCode;
+          return `<div class="result-row"><span class="pos">#${offset + idx + 1}</span><span class="name">${mapName} · ${nick}</span><span class="time">${ms} ms</span></div>`;
         })
         .join("");
     } catch (err) {
       ui.lbList.innerHTML = `<div class='result-row'><span class='name'>加载失败：${err.message}</span></div>`;
+    }
+  }
+
+  async function loadAllRecords(append = false) {
+    if (!ui.lbAllList || uiState.leaderboard.loadingAll || uiState.leaderboard.allEnded) return;
+    uiState.leaderboard.loadingAll = true;
+    if (!append) {
+      uiState.leaderboard.allOffset = 0;
+      uiState.leaderboard.allEnded = false;
+      ui.lbAllList.innerHTML = "加载中...";
+    }
+    try {
+      const { allOffset, allLimit } = uiState.leaderboard;
+      const data = await apiRequest(`/leaderboard/all?limit=${allLimit}&offset=${allOffset}`);
+      const items = data.items || [];
+      if (!append) ui.lbAllList.innerHTML = "";
+      if (!items.length) {
+        if (!append) ui.lbAllList.innerHTML = "<div class='result-row'><span class='name'>暂无记录</span></div>";
+        uiState.leaderboard.allEnded = true;
+        return;
+      }
+      const html = items
+        .map((row) => {
+          const mapName = MAP_LABELS[row.track] || row.track;
+          return `<div class="result-row"><span class="name">${mapName} · ${row.name}</span><span class="time">${row.bestMs} ms</span></div>`;
+        })
+        .join("");
+      ui.lbAllList.insertAdjacentHTML("beforeend", html);
+      uiState.leaderboard.allOffset += items.length;
+      if (items.length < allLimit) uiState.leaderboard.allEnded = true;
+    } catch (err) {
+      if (!append) ui.lbAllList.innerHTML = `<div class='result-row'><span class='name'>加载失败：${err.message}</span></div>`;
+    } finally {
+      uiState.leaderboard.loadingAll = false;
     }
   }
 
@@ -398,6 +469,15 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     const ws = uiState.pvpSocket;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     ws.send(JSON.stringify({ type, ...payload }));
+  }
+
+  async function submitFinishRecord(mapCode, durationMs) {
+    if (!uiState.authToken) throw new Error("未登录");
+    return apiRequest("/leaderboard/submit", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ mapCode, score: durationMs, durationMs }),
+    });
   }
 
   function setupUi(applySettings) {
@@ -423,11 +503,38 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     ui.multiBtn?.addEventListener("click", () => switchMenuMode("multi"));
     ui.leaderboardBtn?.addEventListener("click", () => {
       switchMenuMode("leaderboard");
+      uiState.leaderboard.page = 1;
+      void refreshLeaderboard();
+      void loadAllRecords(false);
+    });
+
+    ui.lbMapCode?.addEventListener("change", () => {
+      uiState.leaderboard.page = 1;
+      void refreshLeaderboard();
+    });
+
+    ui.lbPrevBtn?.addEventListener("click", () => {
+      uiState.leaderboard.page = Math.max(1, uiState.leaderboard.page - 1);
+      void refreshLeaderboard();
+    });
+
+    ui.lbNextBtn?.addEventListener("click", () => {
+      uiState.leaderboard.page += 1;
       void refreshLeaderboard();
     });
 
     ui.lbRefreshBtn?.addEventListener("click", () => {
       void refreshLeaderboard();
+      void loadAllRecords(false);
+    });
+
+    ui.lbAllList?.addEventListener("wheel", (event) => {
+      const el = ui.lbAllList;
+      if (!el) return;
+      const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 24;
+      if (event.deltaY > 0 && nearBottom) {
+        void loadAllRecords(true);
+      }
     });
 
     ui.registerBtn?.addEventListener("click", async () => {
@@ -463,6 +570,54 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
       } catch (err) {
         ui.authStatus.textContent = `登录失败：${err.message}`;
       }
+    });
+
+    ui.finishRegisterBtn?.addEventListener("click", async () => {
+      try {
+        const email = ui.finishEmail?.value?.trim();
+        const nickname = ui.finishNickname?.value?.trim();
+        const password = ui.finishPassword?.value || "";
+        const data = await apiRequest("/auth/register", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, nickname, password }),
+        });
+        uiState.authToken = data.token || "";
+        localStorage.setItem("bike_auth_token", uiState.authToken);
+        const latest = uiState.lastFinish;
+        if (latest) {
+          await submitFinishRecord(latest.mapCode, latest.durationMs);
+          ui.finishAuthStatus.textContent = "注册并保存成功";
+        }
+      } catch (err) {
+        ui.finishAuthStatus.textContent = `失败：${err.message}`;
+      }
+    });
+
+    ui.finishLoginBtn?.addEventListener("click", async () => {
+      try {
+        const email = ui.finishEmail?.value?.trim();
+        const password = ui.finishPassword?.value || "";
+        const data = await apiRequest("/auth/login", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        uiState.authToken = data.token || "";
+        localStorage.setItem("bike_auth_token", uiState.authToken);
+        const latest = uiState.lastFinish;
+        if (latest) {
+          await submitFinishRecord(latest.mapCode, latest.durationMs);
+          ui.finishAuthStatus.textContent = "登录并保存成功";
+        }
+      } catch (err) {
+        ui.finishAuthStatus.textContent = `失败：${err.message}`;
+      }
+    });
+
+    ui.finishSkipBtn?.addEventListener("click", () => {
+      if (ui.postFinishAuth) ui.postFinishAuth.classList.add("hidden");
+      ui.finishAuthStatus.textContent = "已跳过保存";
     });
 
     ui.queueBtn?.addEventListener("click", () => {
@@ -900,7 +1055,7 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
       : "none";
   }
 
-  function showResultPanel(game, getRaceOrder) {
+  async function showResultPanel(game, getRaceOrder) {
     game.resultShown = true;
     setResultVisible(true);
 
@@ -919,6 +1074,27 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
       const timeText = racer.finishTime != null ? formatRaceTime(racer.finishTime) : "未完赛";
       row.innerHTML = `<span class="pos">#${i + 1}</span><span class="name">${racer.name}${racer.profile ? ` (${racer.profile.key})` : ""}</span><span class="time">${timeText}</span>`;
       ui.resultList.appendChild(row);
+    }
+
+    const isSingle = !game.multiplayer?.active;
+    const durationMs = Math.max(1, Math.floor((game.raceFinishedAt || game.raceElapsed) * 1000));
+    uiState.lastFinish = { mapCode: game.activeLevel?.id || getSelectedLevelId(), durationMs };
+
+    if (!isSingle) {
+      if (ui.postFinishAuth) ui.postFinishAuth.classList.add("hidden");
+      return;
+    }
+
+    if (uiState.authToken) {
+      try {
+        await submitFinishRecord(uiState.lastFinish.mapCode, uiState.lastFinish.durationMs);
+      } catch {
+        // ignore and let user retry from leaderboard panel
+      }
+      if (ui.postFinishAuth) ui.postFinishAuth.classList.add("hidden");
+    } else {
+      if (ui.postFinishAuth) ui.postFinishAuth.classList.remove("hidden");
+      if (ui.finishAuthStatus) ui.finishAuthStatus.textContent = "游客通关：登录或注册可保存本次成绩";
     }
   }
 

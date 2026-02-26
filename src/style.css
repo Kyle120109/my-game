@@ -779,3 +779,11 @@ canvas {
     transform: scale(1.08);
   }
 }
+
+.lb-scroll {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 10px;
+  padding: 4px;
+}

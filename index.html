@@ -75,12 +75,26 @@
           </div>
 
           <div id="leaderboard-panel" class="mode-panel hidden">
-            <h3>地图排行榜</h3>
+            <h3>地图排行榜（按地图分页）</h3>
             <div class="menu-actions">
-              <input id="lb-map-code" type="text" value="ring" placeholder="地图ID" />
+              <select id="lb-map-code">
+                <option value="ring">环峰禁区 (ring)</option>
+                <option value="serpent">裂脊蛇行 (serpent)</option>
+                <option value="urban8">城市双环立交 (urban8)</option>
+                <option value="harbor">港口巨构 (harbor)</option>
+                <option value="alpine">雪岭飞坠 (alpine)</option>
+                <option value="lava">熔火裂谷 (lava)</option>
+                <option value="neon">霓虹疾线 (neon)</option>
+                <option value="ruins">遗迹断层 (ruins)</option>
+              </select>
+              <button id="lb-prev-btn" class="ghost-btn" type="button">上一页</button>
+              <span id="lb-page-info" class="hint">第 1 页</span>
+              <button id="lb-next-btn" class="ghost-btn" type="button">下一页</button>
               <button id="lb-refresh-btn" class="ghost-btn" type="button">刷新榜单</button>
             </div>
             <div id="lb-list" class="result-list"></div>
+            <h4>全部记录（滚轮查看更多）</h4>
+            <div id="lb-all-list" class="result-list lb-scroll"></div>
           </div>
           <div id="settings-panel" class="settings-panel hidden">
             <h3>比赛设置</h3>
@@ -195,6 +209,21 @@
             <div class="result-chip">最高速度 <span id="result-top-speed">0 km/h</span></div>
           </div>
           <div id="result-list" class="result-list"></div>
+          <div id="post-finish-auth" class="settings-panel hidden">
+            <h3>保存成绩到排行榜</h3>
+            <p class="hint">当前为游客：可注册/登录后保存本次通关成绩，也可跳过。</p>
+            <div class="auth-grid">
+              <input id="finish-email" type="email" placeholder="邮箱" />
+              <input id="finish-nickname" type="text" placeholder="昵称(注册用)" />
+              <input id="finish-password" type="password" placeholder="密码" />
+            </div>
+            <div class="menu-actions">
+              <button id="finish-register-btn" class="primary-btn" type="button">注册并保存</button>
+              <button id="finish-login-btn" class="ghost-btn" type="button">登录并保存</button>
+              <button id="finish-skip-btn" class="ghost-btn" type="button">跳过</button>
+            </div>
+            <p id="finish-auth-status" class="hint"></p>
+          </div>
           <div class="menu-actions">
             <button id="result-retry-btn" class="primary-btn" type="button">再来一局</button>
             <button id="result-menu-btn" class="ghost-btn" type="button">返回菜单</button>
