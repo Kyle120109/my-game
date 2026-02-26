@@ -482,9 +482,12 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
 
       ui.roomsList.querySelectorAll(".room-join-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          ui.roomIdInput.value = btn.dataset.room || "lobby";
-          if (btn.dataset.map) ui.roomMapSelect.value = btn.dataset.map;
-          ui.authStatus.textContent = `已选择房间 ${ui.roomIdInput.value}`;
+          const roomId = btn.dataset.room || "lobby";
+          const mapId = btn.dataset.map || "ring";
+          ui.roomIdInput.value = roomId;
+          ui.roomMapSelect.value = mapId;
+          connectRoom(roomId, mapId);
+          if (ui.matchLobbyPanel) ui.matchLobbyPanel.classList.add("hidden");
         });
       });
     } catch (err) {
@@ -520,6 +523,124 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ mapCode, score: durationMs, durationMs }),
     });
+  }
+
+  function connectRoom(roomId, mapId) {
+    if (!uiState.authToken) {
+      ui.authStatus.textContent = "请先登录";
+      return;
+    }
+    try {
+      if (uiState.pvpSocket) {
+        uiState.pvpSocket.close();
+        uiState.pvpSocket = null;
+      }
+      const wsProto = apiBase.startsWith("https") ? "wss" : "ws";
+      const wsBase = apiBase.replace(/^https?/, wsProto);
+      const ws = new WebSocket(`${wsBase}/pvp/queue?token=${encodeURIComponent(uiState.authToken)}&room=${encodeURIComponent(roomId)}`);
+      uiState.pvpSocket = ws;
+      uiState.lobby.roomId = roomId;
+      uiState.lobby.mapId = mapId;
+
+      ws.onopen = () => {
+        uiState.lobby.connected = true;
+        ui.authStatus.textContent = "已进入房间，等待其他玩家...";
+        window.__BIKE_MP_NET__ = {
+          send: (type, payload = {}) => sendLobby(type, payload),
+          remoteStates: {},
+          remoteActions: [],
+          roomId,
+          meId: uiState.lobby.meId,
+        };
+        sendLobby("join_room", { roomId, mapId });
+        renderRoomState();
+      };
+
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type === "room_state") {
+          uiState.lobby.players = msg.players || [];
+          uiState.lobby.ready = msg.ready || {};
+          uiState.lobby.hostId = msg.hostId || null;
+          uiState.lobby.meId = msg.meId || uiState.lobby.meId;
+          uiState.lobby.mapId = msg.mapId || uiState.lobby.mapId;
+          if (window.__BIKE_MP_NET__) {
+            window.__BIKE_MP_NET__.meId = uiState.lobby.meId;
+            window.__BIKE_MP_NET__.roomId = uiState.lobby.roomId;
+          }
+          renderRoomState();
+          return;
+        }
+        if (msg.type === "joined") {
+          uiState.lobby.meId = msg.meId || uiState.lobby.meId;
+          if (window.__BIKE_MP_NET__) window.__BIKE_MP_NET__.meId = uiState.lobby.meId;
+          ui.authStatus.textContent = `已加入房间：${uiState.lobby.roomId}`;
+          renderRoomState();
+          return;
+        }
+        if (msg.type === "match_found") {
+          ui.authStatus.textContent = "房间人数已满足，可准备并开始";
+          renderRoomState();
+          return;
+        }
+        if (msg.type === "player_state") {
+          if (window.__BIKE_MP_NET__ && msg.from && msg.p) {
+            const prev = window.__BIKE_MP_NET__.remoteStates[msg.from];
+            if (!prev || (msg.t || 0) >= (prev.t || 0)) {
+              window.__BIKE_MP_NET__.remoteStates[msg.from] = msg;
+            }
+          }
+          return;
+        }
+        if (msg.type === "action") {
+          if (window.__BIKE_MP_NET__ && msg.from && msg.action) {
+            window.__BIKE_MP_NET__.remoteActions.push(msg);
+          }
+          return;
+        }
+        if (msg.type === "room_closed") {
+          ui.authStatus.textContent = "房间已关闭（人数不足），请重新匹配";
+          uiState.lobby.connected = false;
+          uiState.lobby.players = [];
+          uiState.lobby.ready = {};
+          renderRoomState();
+          window.__BIKE_MP_START__ = { active: false };
+          window.__BIKE_MP_NET__ = null;
+          return;
+        }
+        if (msg.type === "start_game") {
+          const players = msg.players || [];
+          window.__BIKE_MP_START__ = {
+            active: true,
+            roomId: msg.roomId || uiState.lobby.roomId,
+            mapId: msg.mapId || uiState.lobby.mapId,
+            meId: uiState.lobby.meId,
+            players,
+            startAt: msg.startAt || Date.now(),
+          };
+          onStartRace((msg.mapId || uiState.lobby.mapId || getSelectedLevelId()));
+        }
+      };
+
+      ws.onerror = () => {
+        ui.authStatus.textContent = "连接房间失败";
+      };
+
+      ws.onclose = () => {
+        uiState.lobby.connected = false;
+        uiState.lobby.players = [];
+        uiState.lobby.ready = {};
+        renderRoomState();
+        if (window.__BIKE_MP_NET__) {
+          window.__BIKE_MP_NET__.roomId = null;
+          window.__BIKE_MP_NET__.meId = null;
+          window.__BIKE_MP_NET__.remoteStates = {};
+          window.__BIKE_MP_NET__.remoteActions = [];
+        }
+      };
+    } catch (err) {
+      ui.authStatus.textContent = `进入房间失败：${err.message}`;
+    }
   }
 
   function setupUi(applySettings) {
@@ -678,121 +799,9 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     });
 
     ui.queueBtn?.addEventListener("click", () => {
-      if (!uiState.authToken) {
-        ui.authStatus.textContent = "请先登录";
-        return;
-      }
-      try {
-        if (uiState.pvpSocket) {
-          uiState.pvpSocket.close();
-          uiState.pvpSocket = null;
-        }
-        const roomId = ui.roomIdInput?.value?.trim() || "lobby";
-        const mapId = ui.roomMapSelect?.value || "ring";
-        const wsProto = apiBase.startsWith("https") ? "wss" : "ws";
-        const wsBase = apiBase.replace(/^https?/, wsProto);
-        const ws = new WebSocket(`${wsBase}/pvp/queue?token=${encodeURIComponent(uiState.authToken)}&room=${encodeURIComponent(roomId)}`);
-        uiState.pvpSocket = ws;
-        uiState.lobby.roomId = roomId;
-        uiState.lobby.mapId = mapId;
-
-        ws.onopen = () => {
-          uiState.lobby.connected = true;
-          ui.authStatus.textContent = "已进入房间，等待其他玩家...";
-          window.__BIKE_MP_NET__ = {
-            send: (type, payload = {}) => sendLobby(type, payload),
-            remoteStates: {},
-            remoteActions: [],
-            roomId,
-            meId: uiState.lobby.meId,
-          };
-          sendLobby("join_room", { roomId, mapId });
-          renderRoomState();
-        };
-
-        ws.onmessage = (event) => {
-          const msg = JSON.parse(event.data);
-          if (msg.type === "room_state") {
-            uiState.lobby.players = msg.players || [];
-            uiState.lobby.ready = msg.ready || {};
-            uiState.lobby.hostId = msg.hostId || null;
-            uiState.lobby.meId = msg.meId || uiState.lobby.meId;
-            uiState.lobby.mapId = msg.mapId || uiState.lobby.mapId;
-            if (window.__BIKE_MP_NET__) {
-              window.__BIKE_MP_NET__.meId = uiState.lobby.meId;
-              window.__BIKE_MP_NET__.roomId = uiState.lobby.roomId;
-            }
-            renderRoomState();
-            return;
-          }
-          if (msg.type === "joined") {
-            uiState.lobby.meId = msg.meId || uiState.lobby.meId;
-            if (window.__BIKE_MP_NET__) window.__BIKE_MP_NET__.meId = uiState.lobby.meId;
-            ui.authStatus.textContent = `已加入房间：${uiState.lobby.roomId}`;
-            renderRoomState();
-            return;
-          }
-          if (msg.type === "match_found") {
-            ui.authStatus.textContent = "房间人数已满足，可准备并开始";
-            renderRoomState();
-            return;
-          }
-          if (msg.type === "player_state") {
-            if (window.__BIKE_MP_NET__ && msg.from && msg.p) {
-              const prev = window.__BIKE_MP_NET__.remoteStates[msg.from];
-              if (!prev || (msg.t || 0) >= (prev.t || 0)) {
-                window.__BIKE_MP_NET__.remoteStates[msg.from] = msg;
-              }
-            }
-            return;
-          }
-          if (msg.type === "action") {
-            if (window.__BIKE_MP_NET__ && msg.from) {
-              window.__BIKE_MP_NET__.remoteActions.push(msg);
-            }
-            return;
-          }
-          if (msg.type === "room_closed") {
-            ui.authStatus.textContent = "房间已自动注销（人数不足），请重新创建/加入房间";
-            uiState.lobby.ready = {};
-            renderRoomState();
-            if (window.__BIKE_GAME__?.game?.state && window.__BIKE_GAME__.game.state !== 0) {
-              Promise.resolve(onOpenMenu());
-            }
-            return;
-          }
-          if (msg.type === "start_game") {
-            ui.authStatus.textContent = "房主已开始游戏，进入地图...";
-            if (msg.mapId) {
-              setSelectedLevelId(msg.mapId);
-              refreshLevelSelection();
-            }
-            window.__BIKE_MP_START__ = {
-              active: true,
-              roomId: uiState.lobby.roomId,
-              meId: uiState.lobby.meId,
-              players: msg.players || uiState.lobby.players || [],
-            };
-            Promise.resolve(onStartRace(getSelectedLevelId()));
-            return;
-          }
-          ui.authStatus.textContent = `事件：${msg.type}`;
-        };
-
-        ws.onerror = () => {
-          ui.authStatus.textContent = "房间连接失败";
-        };
-
-        ws.onclose = () => {
-          uiState.lobby.connected = false;
-          uiState.lobby.players = [];
-          uiState.lobby.ready = {};
-          window.__BIKE_MP_NET__ = null;
-          renderRoomState();
-        };
-      } catch (err) {
-        ui.authStatus.textContent = `进入房间失败：${err.message}`;
-      }
+      const roomId = ui.roomIdInput?.value?.trim() || "lobby";
+      const mapId = ui.roomMapSelect?.value || "ring";
+      connectRoom(roomId, mapId);
     });
 
     ui.readyBtn?.addEventListener("click", () => {
