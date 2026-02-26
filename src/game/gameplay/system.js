@@ -339,6 +339,24 @@ export function createGameplaySystem({ input, settings, ui, fx, updateRacerVisua
     return [...game.racers].sort(compareRaceOrder);
   }
 
+  function applyNetworkAction(game, action) {
+    if (!action?.from || !action?.action) return;
+    const actor = game.racers.find((r) => r.networkId === action.from);
+    if (!actor) return;
+
+    if (action.action === "punch") {
+      actor.punchCooldown = 0;
+      combat.tryPunch(game, actor);
+      return;
+    }
+
+    if (action.action === "item") {
+      actor.itemCooldown = 0;
+      if (action.itemType && action.itemType !== "none") actor.itemType = action.itemType;
+      if (actor.itemType) items.useItem(game, actor);
+    }
+  }
+
   return {
     animateCheckpointAndItems: items.animateCheckpointAndItems,
     updateReady: checkpoints.updateReady,
@@ -346,6 +364,7 @@ export function createGameplaySystem({ input, settings, ui, fx, updateRacerVisua
     updateStealthCatchup: checkpoints.updateStealthCatchup,
     getRaceOrder,
     compareRaceOrder,
+    applyNetworkAction,
   };
 }
 

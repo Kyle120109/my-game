@@ -742,3 +742,40 @@ canvas {
   color: var(--text);
   padding: 8px 10px;
 }
+
+.menu-panel.mode-bg-photo {
+  overflow: hidden;
+}
+
+.menu-panel.mode-bg-photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('/multi-bg.jpg');
+  background-size: cover;
+  background-position: 50% 34%;
+  background-repeat: no-repeat;
+  filter: saturate(1.05) contrast(1.03) brightness(0.72);
+  transform: scale(1.03);
+  z-index: 0;
+}
+
+.menu-panel.mode-bg-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6,10,14,0.36) 0%, rgba(6,10,14,0.66) 100%);
+  z-index: 0;
+}
+
+.menu-panel.mode-bg-photo > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-aspect-ratio: 21/9) {
+  .menu-panel.mode-bg-photo::before {
+    background-position: 50% 30%;
+    transform: scale(1.08);
+  }
+}

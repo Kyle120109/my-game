@@ -341,6 +341,11 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     ui.singleBtn?.classList.toggle("active", mode === "single");
     ui.multiBtn?.classList.toggle("active", mode === "multi");
     ui.leaderboardBtn?.classList.toggle("active", mode === "leaderboard");
+
+    const panel = ui.menuScreen?.querySelector?.(".menu-panel");
+    if (panel) {
+      panel.classList.toggle("mode-bg-photo", mode === "multi" || mode === "leaderboard");
+    }
   }
 
   async function apiRequest(path, options = {}) {
@@ -539,6 +544,9 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
             ui.authStatus.textContent = "房间已自动注销（人数不足），请重新创建/加入房间";
             uiState.lobby.ready = {};
             renderRoomState();
+            if (window.__BIKE_GAME__?.game?.state && window.__BIKE_GAME__.game.state !== 0) {
+              Promise.resolve(onOpenMenu());
+            }
             return;
           }
           if (msg.type === "start_game") {
