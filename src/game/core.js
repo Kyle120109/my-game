@@ -266,6 +266,8 @@ export function bootstrapGame() {
     }
     world.setupWorld(game, levelId);
 
+    const profileName = localStorage.getItem("bike_player_name") || "游客";
+
     const mpStart = window.__BIKE_MP_START__;
     const isMultiplayer = !!(mpStart && mpStart.active);
     if (isMultiplayer) {
@@ -279,6 +281,8 @@ export function bootstrapGame() {
       game.multiplayer.remoteStates = {};
       game.multiplayer.remoteRacers = {};
       game.multiplayer.sendTimer = 0;
+
+      if (game.player) game.player.name = profileName;
 
       const remotes = game.racers.filter((r) => !r.isPlayer);
       const remotePlayers = players.filter((p) => p.id !== game.multiplayer.meId);
@@ -298,6 +302,7 @@ export function bootstrapGame() {
     } else {
       const count = THREE.MathUtils.randInt(5, 8);
       entities.spawnRacers(game, count, false);
+      if (game.player) game.player.name = profileName;
       game.multiplayer.active = false;
       game.multiplayer.roomId = null;
       game.multiplayer.meId = null;

@@ -591,6 +591,7 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
         });
         uiState.authToken = data.token || "";
         localStorage.setItem("bike_auth_token", uiState.authToken);
+        localStorage.setItem("bike_player_name", data.user?.nickname || "游客");
         ui.authStatus.textContent = `注册成功：${data.user?.nickname || "OK"}`;
       } catch (err) {
         ui.authStatus.textContent = `注册失败：${err.message}`;
@@ -608,6 +609,7 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
         });
         uiState.authToken = data.token || "";
         localStorage.setItem("bike_auth_token", uiState.authToken);
+        localStorage.setItem("bike_player_name", data.user?.nickname || "游客");
         ui.authStatus.textContent = `登录成功：${data.user?.nickname || "OK"}`;
       } catch (err) {
         ui.authStatus.textContent = `登录失败：${err.message}`;
@@ -626,6 +628,7 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
         });
         uiState.authToken = data.token || "";
         localStorage.setItem("bike_auth_token", uiState.authToken);
+        localStorage.setItem("bike_player_name", data.user?.nickname || "游客");
         const latest = uiState.lastFinish;
         if (latest) {
           await submitFinishRecord(latest.mapCode, latest.durationMs);
@@ -647,6 +650,7 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
         });
         uiState.authToken = data.token || "";
         localStorage.setItem("bike_auth_token", uiState.authToken);
+        localStorage.setItem("bike_player_name", data.user?.nickname || "游客");
         const latest = uiState.lastFinish;
         if (latest) {
           await submitFinishRecord(latest.mapCode, latest.durationMs);
