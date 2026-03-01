@@ -450,7 +450,15 @@ export function createModelLibrary() {
     gripL.position.set(-0.33, 0, 0);
     const gripR = gripL.clone();
     gripR.position.set(0.33, 0, 0);
-    handleWrapper.add(gripL, gripR);
+
+    // Natively embed exact geometric target anchors for the Inverse Kinematics solver
+    // Hand geometry has palm at -0.04 from wrist, so wrist must be aimed +0.06 up and back
+    // to cleanly wrap fingers.
+    const gripTargetL = new THREE.Group();
+    gripTargetL.position.set(-0.35, 0.03, 0.05); // slightly outer, up, and back
+    const gripTargetR = new THREE.Group();
+    gripTargetR.position.set(0.35, 0.03, 0.05);
+    handleWrapper.add(gripL, gripR, gripTargetL, gripTargetR);
 
     // Fork now natively inherits the realistic tilt of the steering axis
     const forkPivot = new THREE.Group();
@@ -859,6 +867,8 @@ export function createModelLibrary() {
       },
       gripL,
       gripR,
+      gripTargetL,
+      gripTargetR,
     };
   }
 

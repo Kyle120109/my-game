@@ -115,6 +115,8 @@ export function createEntitiesSystem({ modelLibrary }) {
       pedalR: model.pedalR,
       gripL: model.gripL,
       gripR: model.gripR,
+      gripTargetL: model.gripTargetL,
+      gripTargetR: model.gripTargetR,
       rig: model.rig,
       position: new THREE.Vector3(),
       velocity: new THREE.Vector3(),
@@ -397,19 +399,20 @@ export function createEntitiesSystem({ modelLibrary }) {
 
         const leftTarget = new THREE.Vector3();
         const rightTarget = new THREE.Vector3();
-        racer.gripL.getWorldPosition(leftTarget);
-        racer.gripR.getWorldPosition(rightTarget);
-
-        // Nudge target points slightly back/up to grip naturally
-        leftTarget.y += 0.05; leftTarget.z += 0.05; leftTarget.x -= 0.02;
-        rightTarget.y += 0.05; rightTarget.z += 0.05; rightTarget.x += 0.02;
+        if (racer.gripTargetL && racer.gripTargetR) {
+          racer.gripTargetL.getWorldPosition(leftTarget);
+          racer.gripTargetR.getWorldPosition(rightTarget);
+        } else {
+          racer.gripL.getWorldPosition(leftTarget);
+          racer.gripR.getWorldPosition(rightTarget);
+        }
 
         solveTwoBoneIK(racer.rig.leftShoulder, racer.rig.leftElbow, racer.rig.leftWrist, leftTarget, 0.28, 0.26, -1);
         solveTwoBoneIK(racer.rig.rightShoulder, racer.rig.rightElbow, racer.rig.rightWrist, rightTarget, 0.28, 0.26, 1);
 
-        // Lock wrists forward onto grips
-        racer.rig.leftWrist.rotation.set(-0.2, steerAmount * 0.8, -0.2);
-        racer.rig.rightWrist.rotation.set(-0.2, steerAmount * 0.8, 0.2);
+        // Lock wrists forward onto grips smoothly (IK already points forearm correctly)
+        racer.rig.leftWrist.rotation.set(-0.4, 0, 0); // Bend wrist down to wrap palm
+        racer.rig.rightWrist.rotation.set(-0.4, 0, 0);
 
         // Curl fingers around grips
         if (racer.rig.leftDigits) {
