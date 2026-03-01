@@ -555,94 +555,214 @@ export function createModelLibrary() {
     bikeRoot.add(shieldOrbs);
 
     riderRoot.position.set(0, 1.12, -0.02);
-    const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.2, 0.18, 8, 18), mats.cloth);
-    pelvis.position.set(0, 0.04, -0.06);
-    riderRoot.add(pelvis);
 
-    const spinePivot = new THREE.Group();
-    spinePivot.position.set(0, 0.2, 0.04);
-    riderRoot.add(spinePivot);
-    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.66, 10, 20), mats.cloth);
-    torso.position.set(0, 0.43, 0.09);
-    spinePivot.add(torso);
+    // --- 5x Complexity: Advanced Rigging & Detailed Armor ---
+    
+    // 1. Pelvis / Hips (Base of the spine)
+    const pelvisPivot = new THREE.Group();
+    pelvisPivot.position.set(0, 0.04, -0.06);
+    riderRoot.add(pelvisPivot);
+    const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.2, 0.18, 16, 32), mats.cloth);
+    const belt = new THREE.Mesh(new THREE.TorusGeometry(0.21, 0.04, 12, 32), mats.darkRubber);
+    belt.rotation.x = Math.PI / 2;
+    belt.position.y = 0.08;
+    const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.04), mats.chrome);
+    buckle.position.set(0, 0.08, 0.22);
+    pelvisPivot.add(pelvis, belt, buckle);
 
-    const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.24, 0.14), mats.accent);
-    chestPlate.position.set(0, 0.46, 0.24);
-    chestPlate.rotation.x = -0.22;
-    spinePivot.add(chestPlate);
+    // 2. Multi-Segment Spine
+    const lowerSpinePivot = new THREE.Group();
+    lowerSpinePivot.position.set(0, 0.1, 0);
+    pelvisPivot.add(lowerSpinePivot);
+    const lowerTorso = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.21, 0.2, 16), mats.cloth);
+    lowerTorso.position.y = 0.1;
+    lowerSpinePivot.add(lowerTorso);
 
-    const neckPivot = new THREE.Group();
-    neckPivot.position.set(0, 0.94, 0.23);
-    spinePivot.add(neckPivot);
+    const midSpinePivot = new THREE.Group();
+    midSpinePivot.position.set(0, 0.2, 0);
+    lowerSpinePivot.add(midSpinePivot);
+    const midTorso = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.19, 0.25, 16), mats.cloth);
+    midTorso.position.y = 0.125;
+    const armorStrapBase = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.05, 0.44), mats.darkRubber);
+    armorStrapBase.position.y = 0.1;
+    midSpinePivot.add(midTorso, armorStrapBase);
+
+    const upperSpinePivot = new THREE.Group();
+    upperSpinePivot.position.set(0, 0.25, 0);
+    midSpinePivot.add(upperSpinePivot);
+    const upperTorso = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.25, 16, 32), mats.cloth);
+    upperTorso.position.set(0, 0.12, 0.04);
+    
+    // Detailed Chest Armor
+    const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.28, 0.16), mats.accent);
+    chestPlate.position.set(0, 0.15, 0.22);
+    chestPlate.rotation.x = -0.15;
+    const chestCore = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.18, 16), mats.chrome);
+    chestCore.rotation.x = Math.PI / 2;
+    chestCore.position.set(0, 0.15, 0.28);
+    const backPlate = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.35, 0.1), mats.accent);
+    backPlate.position.set(0, 0.15, -0.15);
+    upperSpinePivot.add(upperTorso, chestPlate, chestCore, backPlate);
+
+    // 3. Multi-Segment Neck & Detailed Head
+    const lowerNeckPivot = new THREE.Group();
+    lowerNeckPivot.position.set(0, 0.35, 0.08);
+    upperSpinePivot.add(lowerNeckPivot);
+    const lowerNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.1, 16), mats.skin);
+    lowerNeck.position.y = 0.05;
+    lowerNeckPivot.add(lowerNeck);
+
+    const upperNeckPivot = new THREE.Group();
+    upperNeckPivot.position.set(0, 0.1, 0);
+    lowerNeckPivot.add(upperNeckPivot);
+    
     const headPivot = new THREE.Group();
     headPivot.position.set(0, 0.06, 0);
-    neckPivot.add(headPivot);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 22, 22), mats.skin);
-    const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.225, 22, 22, 0, Math.PI * 2, 0, Math.PI * 0.66), mats.darkRubber);
-    helmet.position.y = 0.02;
-    headPivot.add(head, helmet);
+    upperNeckPivot.add(headPivot);
 
-    const eyeGeo = new THREE.SphereGeometry(0.03, 10, 10);
-    const eyeWhite = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.3, metalness: 0.02 });
-    const pupilMat = new THREE.MeshStandardMaterial({ color: 0x171717, roughness: 0.2, metalness: 0.05 });
-    const eyeL = new THREE.Mesh(eyeGeo, eyeWhite);
-    const eyeR = eyeL.clone();
-    eyeL.position.set(-0.07, 0.02, 0.18);
-    eyeR.position.set(0.07, 0.02, 0.18);
-    const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.014, 8, 8), pupilMat);
-    const pupilR = pupilL.clone();
-    pupilL.position.set(-0.07, 0.02, 0.204);
-    pupilR.position.set(0.07, 0.02, 0.204);
-    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.08, 10), mats.skin);
-    nose.position.set(0, -0.01, 0.205);
-    nose.rotation.x = Math.PI / 2;
-    const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.01, 8, 12, Math.PI), new THREE.MeshStandardMaterial({ color: 0x8f4e42, roughness: 0.6, metalness: 0.02 }));
-    mouth.position.set(0, -0.08, 0.16);
-    mouth.rotation.x = Math.PI;
-    headPivot.add(eyeL, eyeR, pupilL, pupilR, nose, mouth);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 32, 32), mats.skin);
+    // Detailed Helmet
+    const helmetBase = new THREE.Mesh(new THREE.SphereGeometry(0.215, 32, 32, 0, Math.PI * 2, 0, Math.PI * 0.55), mats.darkRubber);
+    helmetBase.position.y = 0.02;
+    const helmetRidge = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.45, 0.45), mats.accent);
+    helmetRidge.position.set(0, 0.15, 0);
+    const visorPivot = new THREE.Group();
+    visorPivot.position.set(0, 0.05, 0);
+    const visor = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.15, 32, 1, false, Math.PI * 0.2, Math.PI * 0.6), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1, metalness: 0.9 }));
+    visor.rotation.y = -Math.PI / 2;
+    visorPivot.add(visor);
+    const jawPivot = new THREE.Group(); // For facial animation/talking
+    jawPivot.position.set(0, -0.05, 0.1);
+    const jawPanel = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.15), mats.darkRubber);
+    jawPanel.position.set(0, -0.05, 0.1);
+    jawPivot.add(jawPanel);
+    
+    headPivot.add(head, helmetBase, helmetRidge, visorPivot, jawPivot);
 
+    // 4. Arms with Clavicles, Twists, and Articulated Fingers
     const makeArm = (side) => {
-      const shoulder = new THREE.Group();
-      shoulder.position.set(side * 0.32, 0.78, 0.35);
-      spinePivot.add(shoulder);
-      const upper = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.34, 8, 16), mats.cloth);
-      upper.position.set(0, -0.2, 0.03);
-      shoulder.add(upper);
-      const elbow = new THREE.Group();
-      elbow.position.set(0, -0.38, 0.08);
-      shoulder.add(elbow);
-      const lower = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.34, 8, 16), mats.skin);
-      lower.position.set(0, -0.18, 0.08);
-      elbow.add(lower);
-      const wrist = new THREE.Group();
-      wrist.position.set(0, -0.34, 0.1);
-      elbow.add(wrist);
-      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 12), mats.skin);
-      hand.position.set(0, -0.04, 0.04);
-      wrist.add(hand);
-      return { shoulder, elbow, wrist };
+      // Clavicle (Collarbone) allows shrugging
+      const clavicle = new THREE.Group();
+      clavicle.position.set(side * 0.1, 0.28, 0.05);
+      upperSpinePivot.add(clavicle);
+
+      const shoulderPivot = new THREE.Group();
+      shoulderPivot.position.set(side * 0.22, 0, 0);
+      clavicle.add(shoulderPivot);
+      
+      const pauldron = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), mats.accent);
+      pauldron.rotation.z = side * Math.PI / 4;
+      pauldron.position.y = 0.05;
+      
+      const upperArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.28, 12, 24), mats.cloth);
+      upperArm.position.set(0, -0.14, 0);
+      
+      // Upper arm twist joint
+      const upperTwist = new THREE.Group();
+      upperTwist.position.set(0, -0.28, 0);
+      shoulderPivot.add(pauldron, upperArm, upperTwist);
+
+      const elbowPivot = new THREE.Group();
+      // Elbow pad
+      const elbowPad = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.1), mats.darkRubber);
+      elbowPad.position.set(0, 0, -0.06);
+      upperTwist.add(elbowPivot);
+
+      const lowerArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.26, 12, 24), mats.skin);
+      lowerArm.position.set(0, -0.13, 0);
+      
+      // Lower arm twist / Forearm
+      const lowerTwist = new THREE.Group();
+      lowerTwist.position.set(0, -0.26, 0);
+      elbowPivot.add(elbowPad, lowerArm, lowerTwist);
+
+      const wristPivot = new THREE.Group();
+      lowerTwist.add(wristPivot);
+
+      // Articulated Hand (Palm + Thumb + 3 Fingers for optimization, each with 2-3 joints)
+      const palm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.04), mats.skin);
+      palm.position.set(0, -0.04, 0);
+      wristPivot.add(palm);
+
+      const createDigit = (length, radius, segments) => {
+        const root = new THREE.Group();
+        let currentParent = root;
+        const joints = [];
+        const segLen = length / segments;
+        for (let i = 0; i < segments; i++) {
+          const joint = new THREE.Group();
+          joint.position.y = i === 0 ? 0 : -segLen;
+          const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(radius, segLen, 8, 8), mats.skin);
+          mesh.position.y = -segLen / 2;
+          joint.add(mesh);
+          currentParent.add(joint);
+          joints.push(joint);
+          currentParent = joint;
+        }
+        return { root, joints };
+      };
+
+      const thumb = createDigit(0.06, 0.015, 2);
+      thumb.root.position.set(side * 0.04, -0.02, 0.02);
+      thumb.root.rotation.z = side * Math.PI / 4;
+      
+      const indexFinger = createDigit(0.08, 0.012, 3);
+      indexFinger.root.position.set(side * 0.03, -0.08, 0);
+      const midFinger = createDigit(0.085, 0.012, 3);
+      midFinger.root.position.set(0, -0.08, 0);
+      const pinkyFinger = createDigit(0.07, 0.012, 3);
+      pinkyFinger.root.position.set(side * -0.03, -0.08, 0);
+
+      wristPivot.add(thumb.root, indexFinger.root, midFinger.root, pinkyFinger.root);
+
+      return { clavicle, shoulderPivot, upperTwist, elbowPivot, lowerTwist, wristPivot, digits: { thumb, indexFinger, midFinger, pinkyFinger } };
     };
 
+    // 5. Legs with Twists and Articulated Feet
     const makeLeg = (side) => {
-      const hip = new THREE.Group();
-      hip.position.set(side * 0.19, 0.03, -0.08);
-      riderRoot.add(hip);
-      const upper = new THREE.Mesh(new THREE.CapsuleGeometry(0.09, 0.44, 8, 16), mats.cloth);
-      upper.position.set(0, -0.28, 0.04);
-      hip.add(upper);
-      const knee = new THREE.Group();
-      knee.position.set(0, -0.52, 0.05);
-      hip.add(knee);
-      const lower = new THREE.Mesh(new THREE.CapsuleGeometry(0.075, 0.38, 8, 16), mats.cloth);
-      lower.position.set(0, -0.22, 0.03);
-      knee.add(lower);
-      const ankle = new THREE.Group();
-      ankle.position.set(0, -0.4, 0.05);
-      knee.add(ankle);
-      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.22), mats.darkRubber);
-      foot.position.set(0, -0.02, 0.11);
-      ankle.add(foot);
-      return { hip, knee, ankle };
+      const hipPivot = new THREE.Group();
+      hipPivot.position.set(side * 0.12, -0.05, 0);
+      pelvisPivot.add(hipPivot);
+      
+      const upperLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.36, 16, 24), mats.cloth);
+      upperLeg.position.set(0, -0.18, 0);
+
+      const upperLegTwist = new THREE.Group();
+      upperLegTwist.position.set(0, -0.36, 0);
+      hipPivot.add(upperLeg, upperLegTwist);
+
+      const kneePivot = new THREE.Group();
+      const kneePad = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 0.1), mats.darkRubber);
+      kneePad.position.set(0, 0, 0.06);
+      upperLegTwist.add(kneePivot);
+
+      const lowerLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.34, 16, 24), mats.cloth);
+      lowerLeg.position.set(0, -0.17, 0);
+
+      const lowerLegTwist = new THREE.Group();
+      lowerLegTwist.position.set(0, -0.34, 0);
+      kneePivot.add(kneePad, lowerLeg, lowerLegTwist);
+
+      const anklePivot = new THREE.Group();
+      lowerLegTwist.add(anklePivot);
+
+      // Articulated Foot: Heel + Ball + Toe
+      const heel = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.08), mats.darkRubber);
+      heel.position.set(0, -0.03, -0.04);
+      const ballPivot = new THREE.Group();
+      ballPivot.position.set(0, 0, 0.04);
+      const ball = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.05, 0.12), mats.darkRubber);
+      ball.position.set(0, -0.025, 0.06);
+      const toePivot = new THREE.Group();
+      toePivot.position.set(0, 0, 0.12);
+      const toe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 0.08), mats.darkRubber);
+      toe.position.set(0, -0.02, 0.04);
+
+      toePivot.add(toe);
+      ballPivot.add(ball, toePivot);
+      anklePivot.add(heel, ballPivot);
+
+      return { hipPivot, upperLegTwist, kneePivot, lowerLegTwist, anklePivot, ballPivot, toePivot };
     };
 
     const leftArm = makeArm(-1);
@@ -672,21 +792,52 @@ export function createModelLibrary() {
       shieldOrbs,
       crankRoot,
       rig: {
-        spinePivot,
-        neckPivot,
+        // Core Body
+        spinePivot: pelvisPivot, // Fallback for old animations
+        pelvisPivot,
+        lowerSpine: lowerSpinePivot,
+        midSpine: midSpinePivot,
+        upperSpine: upperSpinePivot,
+        lowerNeck: lowerNeckPivot,
+        upperNeck: upperNeckPivot,
+        neckPivot: lowerNeckPivot, // Fallback for old animations
         headPivot,
-        leftShoulder: leftArm.shoulder,
-        leftElbow: leftArm.elbow,
-        leftWrist: leftArm.wrist,
-        rightShoulder: rightArm.shoulder,
-        rightElbow: rightArm.elbow,
-        rightWrist: rightArm.wrist,
-        leftHip: leftLeg.hip,
-        leftKnee: leftLeg.knee,
-        leftAnkle: leftLeg.ankle,
-        rightHip: rightLeg.hip,
-        rightKnee: rightLeg.knee,
-        rightAnkle: rightLeg.ankle,
+        jawPivot,
+        visorPivot,
+        
+        // Arms
+        leftShoulder: leftArm.shoulderPivot, // Fallback
+        leftElbow: leftArm.elbowPivot, // Fallback
+        leftWrist: leftArm.wristPivot, // Fallback
+        leftClavicle: leftArm.clavicle,
+        leftUpperTwist: leftArm.upperTwist,
+        leftLowerTwist: leftArm.lowerTwist,
+        leftDigits: leftArm.digits,
+
+        rightShoulder: rightArm.shoulderPivot, // Fallback
+        rightElbow: rightArm.elbowPivot, // Fallback
+        rightWrist: rightArm.wristPivot, // Fallback
+        rightClavicle: rightArm.clavicle,
+        rightUpperTwist: rightArm.upperTwist,
+        rightLowerTwist: rightArm.lowerTwist,
+        rightDigits: rightArm.digits,
+
+        // Legs
+        leftHip: leftLeg.hipPivot, // Fallback
+        leftKnee: leftLeg.kneePivot, // Fallback
+        leftAnkle: leftLeg.anklePivot, // Fallback
+        leftUpperLegTwist: leftLeg.upperLegTwist,
+        leftLowerLegTwist: leftLeg.lowerLegTwist,
+        leftBall: leftLeg.ballPivot,
+        leftToe: leftLeg.toePivot,
+
+        rightHip: rightLeg.hipPivot, // Fallback
+        rightKnee: rightLeg.kneePivot, // Fallback
+        rightAnkle: rightLeg.anklePivot, // Fallback
+        rightUpperLegTwist: rightLeg.upperLegTwist,
+        rightLowerLegTwist: rightLeg.lowerLegTwist,
+        rightBall: rightLeg.ballPivot,
+        rightToe: rightLeg.toePivot,
       },
       gripL,
       gripR,

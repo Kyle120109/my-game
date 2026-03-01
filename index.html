@@ -1,244 +1,246 @@
 ﻿<!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>山顶速降对抗赛 (Cloud Test)</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;600;700&family=Orbitron:wght@700;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./src/style.css" />
-    <script>window.__BIKE_API_BASE__ = "https://my-game-api.yuankaikyle910-d27.workers.dev";</script>
-    <script type="module" src="./src/main.js"></script>
-  </head>
-  <body>
-    <div id="app">
-      <div id="menu-screen" class="overlay visible">
-        <div id="menu-hero-title" class="menu-hero-title" aria-hidden="true">
-          <div id="menu-hero-letters" class="blast-title-core"></div>
-        </div>
-        <div class="menu-panel">
-          <div class="title-wrap">
-            <p class="kicker">Bike Mountain Rush - Cloud Test</p>
-            <h1>山顶速降对抗赛</h1>
-            <p class="desc">8 人混战山地赛道，拳击与道具干扰、复杂地形飞跃、失误复活，顶住压力拿第一。</p>
-          </div>
-          <div class="menu-actions mode-actions">
-            <button id="single-btn" class="primary-btn" type="button">单人游戏</button>
-            <button id="multi-btn" class="ghost-btn" type="button">多人游戏</button>
-            <button id="leaderboard-btn" class="ghost-btn" type="button">排行榜</button>
-            <button id="settings-btn" class="ghost-btn" type="button">设置</button>
-          </div>
 
-          <div id="single-panel" class="mode-panel">
-            <h3>单人模式：选择地图</h3>
-            <div id="level-grid" class="level-grid"></div>
-            <div class="menu-actions">
-              <button id="start-btn" class="primary-btn" type="button">开始单人游戏</button>
-            </div>
-          </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>山顶速降对抗赛</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;600;700&family=Orbitron:wght@700;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="./src/style.css" />
+  <script>window.__BIKE_API_BASE__ = "https://my-game-api.yuankaikyle910-d27.workers.dev";</script>
+  <script type="module" src="./src/main.js"></script>
+</head>
 
-          <div id="multi-panel" class="mode-panel hidden">
-            <h3>多人模式：注册 / 登录 + 匹配大厅</h3>
-            <div class="auth-grid">
-              <input id="auth-email" type="email" placeholder="邮箱" />
-              <input id="auth-nickname" type="text" placeholder="昵称(注册用)" />
-              <input id="auth-password" type="password" placeholder="密码" />
-            </div>
-            <div class="menu-actions">
-              <button id="register-btn" class="primary-btn" type="button">注册</button>
-              <button id="login-btn" class="ghost-btn" type="button">登录</button>
-              <button id="open-match-lobby-btn" class="ghost-btn" type="button">匹配大厅</button>
-            </div>
-
-            <div id="match-lobby-panel" class="settings-panel hidden">
-              <h4>匹配大厅（可加入等待中的房间）</h4>
-              <div class="menu-actions">
-                <button id="rooms-refresh-btn" class="ghost-btn" type="button">刷新房间列表</button>
-              </div>
-              <div id="rooms-list" class="result-list lb-scroll"></div>
-            </div>
-
-            <div class="lobby-grid">
-              <input id="room-id" type="text" value="lobby" placeholder="创建/加入房间号（如 room-1）" />
-              <select id="room-map">
-                <option value="ring">环峰禁区 (ring)</option>
-                <option value="serpent">裂脊蛇行 (serpent)</option>
-                <option value="urban8">城市双环立交 (urban8)</option>
-                <option value="harbor">港口巨构 (harbor)</option>
-                <option value="alpine">雪岭飞坠 (alpine)</option>
-                <option value="lava">熔火裂谷 (lava)</option>
-                <option value="neon">霓虹疾线 (neon)</option>
-                <option value="ruins">遗迹断层 (ruins)</option>
-              </select>
-              <button id="queue-btn" class="ghost-btn" type="button">加入/创建房间</button>
-              <button id="ready-btn" class="ghost-btn" type="button">准备 / 取消准备</button>
-              <button id="start-room-btn" class="ghost-btn" type="button">开始游戏</button>
-              <button id="leave-room-btn" class="ghost-btn" type="button">退出房间</button>
-            </div>
-            <div id="room-state" class="result-list"></div>
-            <p id="auth-status" class="hint"></p>
-          </div>
-
-          <div id="leaderboard-panel" class="mode-panel hidden">
-            <h3>地图排行榜（按地图分页）</h3>
-            <div class="menu-actions">
-              <select id="lb-map-code">
-                <option value="ring">环峰禁区 (ring)</option>
-                <option value="serpent">裂脊蛇行 (serpent)</option>
-                <option value="urban8">城市双环立交 (urban8)</option>
-                <option value="harbor">港口巨构 (harbor)</option>
-                <option value="alpine">雪岭飞坠 (alpine)</option>
-                <option value="lava">熔火裂谷 (lava)</option>
-                <option value="neon">霓虹疾线 (neon)</option>
-                <option value="ruins">遗迹断层 (ruins)</option>
-              </select>
-              <button id="lb-prev-btn" class="ghost-btn" type="button">上一页</button>
-              <span id="lb-page-info" class="hint">第 1 页</span>
-              <button id="lb-next-btn" class="ghost-btn" type="button">下一页</button>
-              <button id="lb-refresh-btn" class="ghost-btn" type="button">刷新榜单</button>
-            </div>
-            <div id="lb-list" class="result-list"></div>
-            <h4>全部记录（滚轮查看更多）</h4>
-            <div id="lb-all-list" class="result-list lb-scroll"></div>
-          </div>
-          <div id="settings-panel" class="settings-panel hidden">
-            <h3>比赛设置</h3>
-            <div class="setting-row">
-              <label for="setting-volume">音量</label>
-              <input id="setting-volume" type="range" min="0" max="1" step="0.01" value="0.65" />
-              <span id="setting-volume-value">65%</span>
-            </div>
-            <div class="setting-row">
-              <label for="setting-sensitivity">转向灵敏度</label>
-              <input id="setting-sensitivity" type="range" min="0.6" max="1.6" step="0.01" value="1.0" />
-              <span id="setting-sensitivity-value">1.00x</span>
-            </div>
-            <div class="setting-row">
-              <label for="setting-fov">FOV</label>
-              <input id="setting-fov" type="range" min="55" max="95" step="1" value="68" />
-              <span id="setting-fov-value">68</span>
-            </div>
-            <div class="setting-row">
-              <label for="setting-quality">画质</label>
-              <select id="setting-quality">
-                <option value="low">低</option>
-                <option value="medium">中</option>
-                <option value="high" selected>高</option>
-              </select>
-            </div>
-            <div class="setting-row">
-              <label for="setting-shake">镜头晃动</label>
-              <input id="setting-shake" type="checkbox" checked />
-            </div>
-            <div class="setting-row">
-              <label for="setting-blur">动态模糊</label>
-              <input id="setting-blur" type="checkbox" />
-            </div>
-            <p class="hint settings-hint">比赛中可按 Esc 进入暂停设置并继续。</p>
-          </div>
-          <p class="hint">控制：W/S 加减速，A/D 转向，F 出拳，Q 使用道具，R 主动复位，Esc 暂停/继续，F2 检图模式，F3 切图</p>
-        </div>
+<body>
+  <div id="app">
+    <div id="menu-screen" class="overlay visible">
+      <div id="menu-hero-title" class="menu-hero-title" aria-hidden="true">
+        <div id="menu-hero-letters" class="blast-title-core"></div>
       </div>
-
-      <div id="hud" class="overlay hidden">
-        <div class="hud-top">
-          <div class="chip">速度 <span id="speed">0</span> km/h</div>
-          <div class="chip">名次 <span id="rank">1/8</span></div>
-          <div class="chip">检查点 <span id="checkpoint">0/0</span></div>
-          <div class="chip">拳击冷却 <span id="punch-cd">0.0</span>s</div>
-          <div class="chip">道具 <span id="item-slot">无</span></div>
-          <div class="chip">时间 <span id="race-time">00:00.00</span></div>
-          <button id="menu-btn" class="ghost-btn" type="button">暂停</button>
+      <div class="menu-panel">
+        <div class="title-wrap">
+          <p class="kicker">Bike Mountain Rush</p>
+          <h1>山顶速降对抗赛</h1>
+          <p class="desc">8 人混战山地赛道，拳击与道具干扰、复杂地形飞跃、失误复活，顶住压力拿第一。</p>
         </div>
-        <div class="hud-minimap">
-          <canvas id="minimap-canvas" width="220" height="220" aria-label="小地图"></canvas>
+        <div class="menu-actions mode-actions">
+          <button id="single-btn" class="primary-btn" type="button">单人游戏</button>
+          <button id="multi-btn" class="ghost-btn" type="button">多人游戏</button>
+          <button id="leaderboard-btn" class="ghost-btn" type="button">排行榜</button>
+          <button id="settings-btn" class="ghost-btn" type="button">设置</button>
         </div>
-        <div id="countdown" class="countdown"></div>
-        <div id="race-message" class="race-message"></div>
-      </div>
 
-      <div id="pause-screen" class="overlay hidden">
-        <div class="pause-panel">
-          <p class="kicker">Pause Menu</p>
-          <h2>比赛暂停</h2>
-          <p class="desc">当前进度已保留，可在此调整设置后继续比赛。</p>
+        <div id="single-panel" class="mode-panel">
+          <h3>单人模式：选择地图</h3>
+          <div id="level-grid" class="level-grid"></div>
           <div class="menu-actions">
-            <button id="pause-resume-btn" class="primary-btn" type="button">继续比赛 (Esc)</button>
-            <button id="pause-menu-btn" class="ghost-btn" type="button">返回主菜单</button>
-          </div>
-          <div class="settings-panel">
-            <h3>暂停设置</h3>
-            <div class="setting-row">
-              <label for="pause-setting-volume">音量</label>
-              <input id="pause-setting-volume" type="range" min="0" max="1" step="0.01" value="0.65" />
-              <span id="pause-setting-volume-value">65%</span>
-            </div>
-            <div class="setting-row">
-              <label for="pause-setting-sensitivity">转向灵敏度</label>
-              <input id="pause-setting-sensitivity" type="range" min="0.6" max="1.6" step="0.01" value="1.0" />
-              <span id="pause-setting-sensitivity-value">1.00x</span>
-            </div>
-            <div class="setting-row">
-              <label for="pause-setting-fov">FOV</label>
-              <input id="pause-setting-fov" type="range" min="55" max="95" step="1" value="68" />
-              <span id="pause-setting-fov-value">68</span>
-            </div>
-            <div class="setting-row">
-              <label for="pause-setting-quality">画质</label>
-              <select id="pause-setting-quality">
-                <option value="low">低</option>
-                <option value="medium">中</option>
-                <option value="high" selected>高</option>
-              </select>
-            </div>
-            <div class="setting-row">
-              <label for="pause-setting-shake">镜头晃动</label>
-              <input id="pause-setting-shake" type="checkbox" checked />
-            </div>
-            <div class="setting-row">
-              <label for="pause-setting-blur">动态模糊</label>
-              <input id="pause-setting-blur" type="checkbox" />
-            </div>
+            <button id="start-btn" class="primary-btn" type="button">开始单人游戏</button>
           </div>
         </div>
-      </div>
 
-      <div id="result-screen" class="overlay hidden">
-        <div class="result-panel">
-          <p class="kicker">Race Result</p>
-          <h2>终点结算</h2>
-          <p id="result-summary" class="result-summary">--</p>
-          <div class="result-grid">
-            <div class="result-chip">完赛时间 <span id="result-time">--:--.--</span></div>
-            <div class="result-chip">命中次数 <span id="result-hits">0</span></div>
-            <div class="result-chip">最高速度 <span id="result-top-speed">0 km/h</span></div>
-          </div>
-          <div id="result-list" class="result-list"></div>
-          <div id="post-finish-auth" class="settings-panel hidden">
-            <h3>保存成绩到排行榜</h3>
-            <p class="hint">当前为游客：可注册/登录后保存本次通关成绩，也可跳过。</p>
-            <div class="auth-grid">
-              <input id="finish-email" type="email" placeholder="邮箱" />
-              <input id="finish-nickname" type="text" placeholder="昵称(注册用)" />
-              <input id="finish-password" type="password" placeholder="密码" />
-            </div>
-            <div class="menu-actions">
-              <button id="finish-register-btn" class="primary-btn" type="button">注册并保存</button>
-              <button id="finish-login-btn" class="ghost-btn" type="button">登录并保存</button>
-              <button id="finish-skip-btn" class="ghost-btn" type="button">跳过</button>
-            </div>
-            <p id="finish-auth-status" class="hint"></p>
+        <div id="multi-panel" class="mode-panel hidden">
+          <h3>多人模式：注册 / 登录 + 匹配大厅</h3>
+          <div class="auth-grid">
+            <input id="auth-email" type="email" placeholder="邮箱" />
+            <input id="auth-nickname" type="text" placeholder="昵称(注册用)" />
+            <input id="auth-password" type="password" placeholder="密码" />
           </div>
           <div class="menu-actions">
-            <button id="result-retry-btn" class="primary-btn" type="button">再来一局</button>
-            <button id="result-menu-btn" class="ghost-btn" type="button">返回菜单</button>
+            <button id="register-btn" class="primary-btn" type="button">注册</button>
+            <button id="login-btn" class="ghost-btn" type="button">登录</button>
+            <button id="open-match-lobby-btn" class="ghost-btn" type="button">匹配大厅</button>
+          </div>
+
+          <div id="match-lobby-panel" class="settings-panel hidden">
+            <h4>匹配大厅（可加入等待中的房间）</h4>
+            <div class="menu-actions">
+              <button id="rooms-refresh-btn" class="ghost-btn" type="button">刷新房间列表</button>
+            </div>
+            <div id="rooms-list" class="result-list lb-scroll"></div>
+          </div>
+
+          <div class="lobby-grid">
+            <input id="room-id" type="text" value="lobby" placeholder="创建/加入房间号（如 room-1）" />
+            <select id="room-map">
+              <option value="ring">环峰禁区 (ring)</option>
+              <option value="serpent">裂脊蛇行 (serpent)</option>
+              <option value="urban8">城市双环立交 (urban8)</option>
+              <option value="harbor">港口巨构 (harbor)</option>
+              <option value="alpine">雪岭飞坠 (alpine)</option>
+              <option value="lava">熔火裂谷 (lava)</option>
+              <option value="neon">霓虹疾线 (neon)</option>
+              <option value="ruins">遗迹断层 (ruins)</option>
+            </select>
+            <button id="queue-btn" class="ghost-btn" type="button">加入/创建房间</button>
+            <button id="ready-btn" class="ghost-btn" type="button">准备 / 取消准备</button>
+            <button id="start-room-btn" class="ghost-btn" type="button">开始游戏</button>
+            <button id="leave-room-btn" class="ghost-btn" type="button">退出房间</button>
+          </div>
+          <div id="room-state" class="result-list"></div>
+          <p id="auth-status" class="hint"></p>
+        </div>
+
+        <div id="leaderboard-panel" class="mode-panel hidden">
+          <h3>地图排行榜（按地图分页）</h3>
+          <div class="menu-actions">
+            <select id="lb-map-code">
+              <option value="ring">环峰禁区 (ring)</option>
+              <option value="serpent">裂脊蛇行 (serpent)</option>
+              <option value="urban8">城市双环立交 (urban8)</option>
+              <option value="harbor">港口巨构 (harbor)</option>
+              <option value="alpine">雪岭飞坠 (alpine)</option>
+              <option value="lava">熔火裂谷 (lava)</option>
+              <option value="neon">霓虹疾线 (neon)</option>
+              <option value="ruins">遗迹断层 (ruins)</option>
+            </select>
+            <button id="lb-prev-btn" class="ghost-btn" type="button">上一页</button>
+            <span id="lb-page-info" class="hint">第 1 页</span>
+            <button id="lb-next-btn" class="ghost-btn" type="button">下一页</button>
+            <button id="lb-refresh-btn" class="ghost-btn" type="button">刷新榜单</button>
+          </div>
+          <div id="lb-list" class="result-list"></div>
+          <h4>全部记录（滚轮查看更多）</h4>
+          <div id="lb-all-list" class="result-list lb-scroll"></div>
+        </div>
+        <div id="settings-panel" class="settings-panel hidden">
+          <h3>比赛设置</h3>
+          <div class="setting-row">
+            <label for="setting-volume">音量</label>
+            <input id="setting-volume" type="range" min="0" max="1" step="0.01" value="0.65" />
+            <span id="setting-volume-value">65%</span>
+          </div>
+          <div class="setting-row">
+            <label for="setting-sensitivity">转向灵敏度</label>
+            <input id="setting-sensitivity" type="range" min="0.6" max="1.6" step="0.01" value="1.0" />
+            <span id="setting-sensitivity-value">1.00x</span>
+          </div>
+          <div class="setting-row">
+            <label for="setting-fov">FOV</label>
+            <input id="setting-fov" type="range" min="55" max="95" step="1" value="68" />
+            <span id="setting-fov-value">68</span>
+          </div>
+          <div class="setting-row">
+            <label for="setting-quality">画质</label>
+            <select id="setting-quality">
+              <option value="low">低</option>
+              <option value="medium">中</option>
+              <option value="high" selected>高</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <label for="setting-shake">镜头晃动</label>
+            <input id="setting-shake" type="checkbox" checked />
+          </div>
+          <div class="setting-row">
+            <label for="setting-blur">动态模糊</label>
+            <input id="setting-blur" type="checkbox" />
+          </div>
+          <p class="hint settings-hint">比赛中可按 Esc 进入暂停设置并继续。</p>
+        </div>
+        <p class="hint">控制：W/S 加减速，A/D 转向，F 出拳，Q 使用道具，R 主动复位，Esc 暂停/继续，F2 检图模式，F3 切图</p>
+      </div>
+    </div>
+
+    <div id="hud" class="overlay hidden">
+      <div class="hud-top">
+        <div class="chip">速度 <span id="speed">0</span> km/h</div>
+        <div class="chip">名次 <span id="rank">1/8</span></div>
+        <div class="chip">检查点 <span id="checkpoint">0/0</span></div>
+        <div class="chip">拳击冷却 <span id="punch-cd">0.0</span>s</div>
+        <div class="chip">道具 <span id="item-slot">无</span></div>
+        <div class="chip">时间 <span id="race-time">00:00.00</span></div>
+        <button id="menu-btn" class="ghost-btn" type="button">暂停</button>
+      </div>
+      <div class="hud-minimap">
+        <canvas id="minimap-canvas" width="220" height="220" aria-label="小地图"></canvas>
+      </div>
+      <div id="countdown" class="countdown"></div>
+      <div id="race-message" class="race-message"></div>
+    </div>
+
+    <div id="pause-screen" class="overlay hidden">
+      <div class="pause-panel">
+        <p class="kicker">Pause Menu</p>
+        <h2>比赛暂停</h2>
+        <p class="desc">当前进度已保留，可在此调整设置后继续比赛。</p>
+        <div class="menu-actions">
+          <button id="pause-resume-btn" class="primary-btn" type="button">继续比赛 (Esc)</button>
+          <button id="pause-menu-btn" class="ghost-btn" type="button">返回主菜单</button>
+        </div>
+        <div class="settings-panel">
+          <h3>暂停设置</h3>
+          <div class="setting-row">
+            <label for="pause-setting-volume">音量</label>
+            <input id="pause-setting-volume" type="range" min="0" max="1" step="0.01" value="0.65" />
+            <span id="pause-setting-volume-value">65%</span>
+          </div>
+          <div class="setting-row">
+            <label for="pause-setting-sensitivity">转向灵敏度</label>
+            <input id="pause-setting-sensitivity" type="range" min="0.6" max="1.6" step="0.01" value="1.0" />
+            <span id="pause-setting-sensitivity-value">1.00x</span>
+          </div>
+          <div class="setting-row">
+            <label for="pause-setting-fov">FOV</label>
+            <input id="pause-setting-fov" type="range" min="55" max="95" step="1" value="68" />
+            <span id="pause-setting-fov-value">68</span>
+          </div>
+          <div class="setting-row">
+            <label for="pause-setting-quality">画质</label>
+            <select id="pause-setting-quality">
+              <option value="low">低</option>
+              <option value="medium">中</option>
+              <option value="high" selected>高</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <label for="pause-setting-shake">镜头晃动</label>
+            <input id="pause-setting-shake" type="checkbox" checked />
+          </div>
+          <div class="setting-row">
+            <label for="pause-setting-blur">动态模糊</label>
+            <input id="pause-setting-blur" type="checkbox" />
           </div>
         </div>
       </div>
     </div>
-  </body>
+
+    <div id="result-screen" class="overlay hidden">
+      <div class="result-panel">
+        <p class="kicker">Race Result</p>
+        <h2>终点结算</h2>
+        <p id="result-summary" class="result-summary">--</p>
+        <div class="result-grid">
+          <div class="result-chip">完赛时间 <span id="result-time">--:--.--</span></div>
+          <div class="result-chip">命中次数 <span id="result-hits">0</span></div>
+          <div class="result-chip">最高速度 <span id="result-top-speed">0 km/h</span></div>
+        </div>
+        <div id="result-list" class="result-list"></div>
+        <div id="post-finish-auth" class="settings-panel hidden">
+          <h3>保存成绩到排行榜</h3>
+          <p class="hint">当前为游客：可注册/登录后保存本次通关成绩，也可跳过。</p>
+          <div class="auth-grid">
+            <input id="finish-email" type="email" placeholder="邮箱" />
+            <input id="finish-nickname" type="text" placeholder="昵称(注册用)" />
+            <input id="finish-password" type="password" placeholder="密码" />
+          </div>
+          <div class="menu-actions">
+            <button id="finish-register-btn" class="primary-btn" type="button">注册并保存</button>
+            <button id="finish-login-btn" class="ghost-btn" type="button">登录并保存</button>
+            <button id="finish-skip-btn" class="ghost-btn" type="button">跳过</button>
+          </div>
+          <p id="finish-auth-status" class="hint"></p>
+        </div>
+        <div class="menu-actions">
+          <button id="result-retry-btn" class="primary-btn" type="button">再来一局</button>
+          <button id="result-menu-btn" class="ghost-btn" type="button">返回菜单</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
 </html>
