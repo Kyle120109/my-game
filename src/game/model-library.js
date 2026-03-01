@@ -557,7 +557,7 @@ export function createModelLibrary() {
     riderRoot.position.set(0, 1.12, -0.02);
 
     // --- 5x Complexity: Advanced Rigging & Detailed Armor ---
-    
+
     // 1. Pelvis / Hips (Base of the spine)
     const pelvisPivot = new THREE.Group();
     pelvisPivot.position.set(0, 0.04, -0.06);
@@ -592,21 +592,21 @@ export function createModelLibrary() {
     midSpinePivot.add(upperSpinePivot);
     const upperTorso = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.25, 16, 32), mats.cloth);
     upperTorso.position.set(0, 0.12, 0.04);
-    
+
     // Detailed Chest Armor
-    const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.28, 0.16), mats.accent);
-    chestPlate.position.set(0, 0.15, 0.22);
+    const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.22, 0.12), mats.accent);
+    chestPlate.position.set(0, 0.15, 0.14);
     chestPlate.rotation.x = -0.15;
-    const chestCore = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.18, 16), mats.chrome);
+    const chestCore = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.14, 16), mats.chrome);
     chestCore.rotation.x = Math.PI / 2;
-    chestCore.position.set(0, 0.15, 0.28);
-    const backPlate = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.35, 0.1), mats.accent);
-    backPlate.position.set(0, 0.15, -0.15);
+    chestCore.position.set(0, 0.15, 0.18);
+    const backPlate = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.3, 0.08), mats.accent);
+    backPlate.position.set(0, 0.15, -0.12);
     upperSpinePivot.add(upperTorso, chestPlate, chestCore, backPlate);
 
     // 3. Multi-Segment Neck & Detailed Head
     const lowerNeckPivot = new THREE.Group();
-    lowerNeckPivot.position.set(0, 0.35, 0.08);
+    lowerNeckPivot.position.set(0, 0.35, 0.04);
     upperSpinePivot.add(lowerNeckPivot);
     const lowerNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.1, 16), mats.skin);
     lowerNeck.position.y = 0.05;
@@ -615,7 +615,7 @@ export function createModelLibrary() {
     const upperNeckPivot = new THREE.Group();
     upperNeckPivot.position.set(0, 0.1, 0);
     lowerNeckPivot.add(upperNeckPivot);
-    
+
     const headPivot = new THREE.Group();
     headPivot.position.set(0, 0.06, 0);
     upperNeckPivot.add(headPivot);
@@ -624,8 +624,10 @@ export function createModelLibrary() {
     // Detailed Helmet
     const helmetBase = new THREE.Mesh(new THREE.SphereGeometry(0.215, 32, 32, 0, Math.PI * 2, 0, Math.PI * 0.55), mats.darkRubber);
     helmetBase.position.y = 0.02;
-    const helmetRidge = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.45, 0.45), mats.accent);
-    helmetRidge.position.set(0, 0.15, 0);
+    // Fix the weird cube on the head - make it a sleek fin/ridge
+    const helmetRidge = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.15, 0.35), mats.accent);
+    helmetRidge.position.set(0, 0.2, -0.05);
+    helmetRidge.rotation.x = 0.2;
     const visorPivot = new THREE.Group();
     visorPivot.position.set(0, 0.05, 0);
     const visor = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.15, 32, 1, false, Math.PI * 0.2, Math.PI * 0.6), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1, metalness: 0.9 }));
@@ -633,10 +635,12 @@ export function createModelLibrary() {
     visorPivot.add(visor);
     const jawPivot = new THREE.Group(); // For facial animation/talking
     jawPivot.position.set(0, -0.05, 0.1);
-    const jawPanel = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.15), mats.darkRubber);
-    jawPanel.position.set(0, -0.05, 0.1);
+    // Fix the weird cube jaw - make it a fitted chin guard
+    const jawPanel = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.06, 0.1), mats.darkRubber);
+    jawPanel.position.set(0, -0.08, 0.14);
+    jawPanel.rotation.x = -0.2;
     jawPivot.add(jawPanel);
-    
+
     headPivot.add(head, helmetBase, helmetRidge, visorPivot, jawPivot);
 
     // 4. Arms with Clavicles, Twists, and Articulated Fingers
@@ -649,14 +653,14 @@ export function createModelLibrary() {
       const shoulderPivot = new THREE.Group();
       shoulderPivot.position.set(side * 0.22, 0, 0);
       clavicle.add(shoulderPivot);
-      
+
       const pauldron = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), mats.accent);
       pauldron.rotation.z = side * Math.PI / 4;
       pauldron.position.y = 0.05;
-      
+
       const upperArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.28, 12, 24), mats.cloth);
       upperArm.position.set(0, -0.14, 0);
-      
+
       // Upper arm twist joint
       const upperTwist = new THREE.Group();
       upperTwist.position.set(0, -0.28, 0);
@@ -670,7 +674,7 @@ export function createModelLibrary() {
 
       const lowerArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.26, 12, 24), mats.skin);
       lowerArm.position.set(0, -0.13, 0);
-      
+
       // Lower arm twist / Forearm
       const lowerTwist = new THREE.Group();
       lowerTwist.position.set(0, -0.26, 0);
@@ -705,7 +709,7 @@ export function createModelLibrary() {
       const thumb = createDigit(0.06, 0.015, 2);
       thumb.root.position.set(side * 0.04, -0.02, 0.02);
       thumb.root.rotation.z = side * Math.PI / 4;
-      
+
       const indexFinger = createDigit(0.08, 0.012, 3);
       indexFinger.root.position.set(side * 0.03, -0.08, 0);
       const midFinger = createDigit(0.085, 0.012, 3);
@@ -723,7 +727,7 @@ export function createModelLibrary() {
       const hipPivot = new THREE.Group();
       hipPivot.position.set(side * 0.12, -0.05, 0);
       pelvisPivot.add(hipPivot);
-      
+
       const upperLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.36, 16, 24), mats.cloth);
       upperLeg.position.set(0, -0.18, 0);
 
@@ -804,7 +808,7 @@ export function createModelLibrary() {
         headPivot,
         jawPivot,
         visorPivot,
-        
+
         // Arms
         leftShoulder: leftArm.shoulderPivot, // Fallback
         leftElbow: leftArm.elbowPivot, // Fallback

@@ -340,6 +340,9 @@ export function createEntitiesSystem({ modelLibrary }) {
       racer.rig.headPivot.rotation.y = pose.headYaw;
       racer.rig.headPivot.rotation.z = pose.headRoll;
 
+      if (racer.rig.leftClavicle) racer.rig.leftClavicle.rotation.set(0, 0, 0);
+      if (racer.rig.rightClavicle) racer.rig.rightClavicle.rotation.set(0, 0, 0);
+
       racer.rig.leftShoulder.rotation.set(baseArm, 0.05, 0.15 + armAbsorb * 0.2); // Point inward
       racer.rig.leftElbow.rotation.set(baseElbow, 0.1, -0.05);
       racer.rig.leftWrist.rotation.set(-0.2, 0, -0.2); // Hook onto bars
@@ -357,15 +360,30 @@ export function createEntitiesSystem({ modelLibrary }) {
 
       const punchAmount = racer.punchTimer > 0 ? Math.sin((1 - racer.punchTimer / PUNCH_ANIM_TIME) * Math.PI) : 0;
       if (punchAmount > 0) {
-        racer.rig.spinePivot.rotation.y = punchAmount * 0.3;
-        racer.rig.rightShoulder.rotation.x = baseArm + punchAmount * 1.62;
-        racer.rig.rightShoulder.rotation.z = -0.24 - punchAmount * 0.58;
-        racer.rig.rightElbow.rotation.x = -0.74 + punchAmount * 1.66;
-        racer.rig.rightWrist.rotation.x = 0.16 + punchAmount * 0.48;
-        racer.rig.leftShoulder.rotation.x = baseArm + punchAmount * 0.42;
-        racer.rig.leftShoulder.rotation.z = 0.24 + punchAmount * 0.2;
+        racer.rig.spinePivot.rotation.y = punchAmount * 0.4; // Twist torso into the punch
+        racer.rig.rightShoulder.rotation.x = baseArm - punchAmount * 1.5; // Swing arm UP and FORWARD (negative X)
+        racer.rig.rightShoulder.rotation.z = -0.1 + punchAmount * 0.2; // Keep arm slightly inwards
+        racer.rig.rightElbow.rotation.x = baseElbow + punchAmount * Math.abs(baseElbow); // Straighten elbow (towards 0)
+        racer.rig.rightWrist.rotation.x = -0.2; // Keep wrist straight
+        racer.rig.leftShoulder.rotation.x = baseArm + punchAmount * 0.2; // Left arm reacts slightly
+        racer.rig.leftShoulder.rotation.z = 0.2;
+        if (racer.rig.rightDigits) {
+          Object.values(racer.rig.rightDigits).forEach(d => {
+            if (d.root) d.root.rotation.x = -1.5; // Clench fist
+          });
+        }
       } else {
         racer.rig.spinePivot.rotation.y = 0;
+        if (racer.rig.rightDigits) {
+          Object.values(racer.rig.rightDigits).forEach(d => {
+            if (d.root && d !== racer.rig.rightDigits.thumb) d.root.rotation.x = -0.2;
+          });
+        }
+        if (racer.rig.leftDigits) {
+          Object.values(racer.rig.leftDigits).forEach(d => {
+            if (d.root && d !== racer.rig.leftDigits.thumb) d.root.rotation.x = -0.2;
+          });
+        }
       }
 
       // Late update: Two-Bone IK for arms.
@@ -389,8 +407,24 @@ export function createEntitiesSystem({ modelLibrary }) {
         solveTwoBoneIK(racer.rig.rightShoulder, racer.rig.rightElbow, racer.rig.rightWrist, rightTarget, 0.38, 0.38, 1);
 
         // Lock wrists forward onto grips
-        racer.rig.leftWrist.rotation.set(-0.2, 0, -0.2);
-        racer.rig.rightWrist.rotation.set(-0.2, 0, 0.2);
+        racer.rig.leftWrist.rotation.set(-0.2, steerAmount * 0.8, -0.2);
+        racer.rig.rightWrist.rotation.set(-0.2, steerAmount * 0.8, 0.2);
+
+        // Curl fingers around grips
+        if (racer.rig.leftDigits) {
+          racer.rig.leftDigits.indexFinger.root.rotation.x = -1.2;
+          racer.rig.leftDigits.midFinger.root.rotation.x = -1.2;
+          racer.rig.leftDigits.pinkyFinger.root.rotation.x = -1.2;
+          racer.rig.leftDigits.thumb.root.rotation.x = -0.4;
+          racer.rig.leftDigits.thumb.root.rotation.y = 0.2;
+        }
+        if (racer.rig.rightDigits) {
+          racer.rig.rightDigits.indexFinger.root.rotation.x = -1.2;
+          racer.rig.rightDigits.midFinger.root.rotation.x = -1.2;
+          racer.rig.rightDigits.pinkyFinger.root.rotation.x = -1.2;
+          racer.rig.rightDigits.thumb.root.rotation.x = -0.4;
+          racer.rig.rightDigits.thumb.root.rotation.y = -0.2;
+        }
       }
     }
 
@@ -400,18 +434,20 @@ export function createEntitiesSystem({ modelLibrary }) {
 
       const legPower = pose.legPower;
       const cadence = racer.pedalPhase;
-      // Base pedal cycle
+      // Base pedal cycle - Hips rotate backward (positive X) to push pedals down/forward
       let leftHip = Math.sin(cadence) * 0.76 * legPower + 0.16;
       let rightHip = Math.sin(cadence + Math.PI) * 0.76 * legPower + 0.16;
 
-      let leftKnee = Math.max(0, -Math.sin(cadence + 0.2)) * 1.04 * legPower + 0.24;
-      let rightKnee = Math.max(0, -Math.sin(cadence + Math.PI + 0.2)) * 1.04 * legPower + 0.24;
+      // Knees bend backward relative to hips (negative X). 
+      // The original math pushed knee positive, but procedural cylinders usually bend negative to fold back.
+      let leftKnee = -Math.max(0, -Math.sin(cadence + 0.2)) * 1.4 * legPower - 0.2;
+      let rightKnee = -Math.max(0, -Math.sin(cadence + Math.PI + 0.2)) * 1.4 * legPower - 0.2;
 
       // Apply absorption overrides
       leftHip -= legAbsorb * 0.8;
       rightHip -= legAbsorb * 0.8;
-      leftKnee += legAbsorb * 1.5;
-      rightKnee += legAbsorb * 1.5;
+      leftKnee -= legAbsorb * 1.5;
+      rightKnee -= legAbsorb * 1.5;
 
       racer.rig.leftHip.rotation.x = leftHip;
       racer.rig.rightHip.rotation.x = rightHip;
@@ -421,6 +457,13 @@ export function createEntitiesSystem({ modelLibrary }) {
       // Ankles compensate to keep feet flat on pedals
       racer.rig.leftAnkle.rotation.x = THREE.MathUtils.lerp(racer.rig.leftAnkle.rotation.x, -leftHip * 0.54 + 0.18 + legAbsorb * 0.4, 1 - Math.exp(-dt * 12));
       racer.rig.rightAnkle.rotation.x = THREE.MathUtils.lerp(racer.rig.rightAnkle.rotation.x, -rightHip * 0.54 + 0.18 + legAbsorb * 0.4, 1 - Math.exp(-dt * 12));
+
+      if (racer.rig.leftUpperLegTwist) {
+        racer.rig.leftUpperLegTwist.rotation.set(0, 0, 0);
+        racer.rig.leftLowerLegTwist.rotation.set(0, 0, 0);
+        racer.rig.rightUpperLegTwist.rotation.set(0, 0, 0);
+        racer.rig.rightLowerLegTwist.rotation.set(0, 0, 0);
+      }
     }
 
     if (isDown) {
