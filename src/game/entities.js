@@ -407,8 +407,8 @@ export function createEntitiesSystem({ modelLibrary }) {
           racer.gripR.getWorldPosition(rightTarget);
         }
 
-        solveTwoBoneIK(racer.rig.leftShoulder, racer.rig.leftElbow, racer.rig.leftWrist, leftTarget, 0.28, 0.26, -1);
-        solveTwoBoneIK(racer.rig.rightShoulder, racer.rig.rightElbow, racer.rig.rightWrist, rightTarget, 0.28, 0.26, 1);
+        solveTwoBoneIK(racer.rig.leftShoulder, racer.rig.leftElbow, racer.rig.leftWrist, leftTarget, 0.40, 0.40, -1);
+        solveTwoBoneIK(racer.rig.rightShoulder, racer.rig.rightElbow, racer.rig.rightWrist, rightTarget, 0.40, 0.40, 1);
 
         // Lock wrists forward onto grips smoothly (IK already points forearm correctly)
         racer.rig.leftWrist.rotation.set(-0.4, 0, 0); // Bend wrist down to wrap palm
@@ -447,8 +447,8 @@ export function createEntitiesSystem({ modelLibrary }) {
         rightFootTarget.y += 0.08;
 
         // Legs bend backwards -> so invertBend = true.
-        solveTwoBoneIK(racer.rig.leftHip, racer.rig.leftKnee, racer.rig.leftAnkle, leftFootTarget, 0.36, 0.34, -1, true);
-        solveTwoBoneIK(racer.rig.rightHip, racer.rig.rightKnee, racer.rig.rightAnkle, rightFootTarget, 0.36, 0.34, 1, true);
+        solveTwoBoneIK(racer.rig.leftHip, racer.rig.leftKnee, racer.rig.leftAnkle, leftFootTarget, 0.46, 0.46, -1, true);
+        solveTwoBoneIK(racer.rig.rightHip, racer.rig.rightKnee, racer.rig.rightAnkle, rightFootTarget, 0.46, 0.46, 1, true);
 
         // Lock ankles to be relatively flat on the pedals
         racer.rig.leftAnkle.rotation.set(0.1, 0, 0);

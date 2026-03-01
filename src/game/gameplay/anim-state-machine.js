@@ -136,31 +136,31 @@ export class AnimationStateMachine {
 
     _evaluateBlendTree(dt, speed, steer, brake, isDown, recovering) {
         // 1. Base Locomotion Posture
-        // Idle Posture
-        let targetSpinePitch = -0.1 * this.weights.idle;
+        // Idle Posture (Lean forward to reach far bars)
+        let targetSpinePitch = 0.5 * this.weights.idle;
         let targetArmBase = -1.0 * this.weights.idle;
 
-        // Pedal/Coast Posture (Lean forward)
-        targetSpinePitch += (-0.3 - speed * 0.005) * (this.weights.pedal + this.weights.coast);
+        // Pedal/Coast Posture (Lean forward aggressively)
+        targetSpinePitch += (0.7 + speed * 0.005) * (this.weights.pedal + this.weights.coast);
         targetArmBase += (-1.08 + Math.abs(steer) * 0.2) * (this.weights.pedal + this.weights.coast);
 
         // Sprint Posture (Aggressive forward, out of saddle)
-        targetSpinePitch += (-0.45) * this.weights.sprint;
+        targetSpinePitch += (0.95) * this.weights.sprint;
         targetArmBase += (-1.2) * this.weights.sprint;
         let sprintPelvisOffset = 0.15 * this.weights.sprint; // Stand up
 
-        // Brake Posture (Push back, arms straight)
-        targetSpinePitch += (-0.1 + brake * 0.3) * this.weights.brake;
+        // Brake Posture (Push back, arms straight - negative pitches backward)
+        targetSpinePitch += (-0.1 - brake * 0.3) * this.weights.brake;
         targetArmBase += (-0.8 + brake * 0.4) * this.weights.brake;
 
-        // Air Posture
-        targetSpinePitch += (-0.25) * this.weights.air;
+        // Air Posture (Crouch forward)
+        targetSpinePitch += (0.25) * this.weights.air;
         targetArmBase += (-1.0) * this.weights.air;
 
-        // Knockdown/Recover Posture
+        // Knockdown/Recover Posture (Curl forward)
         if (this.weights.knockdown > 0) {
             const downBend = isDown ? 0.9 : recovering ? 0.42 : 0;
-            targetSpinePitch += (-downBend) * this.weights.knockdown;
+            targetSpinePitch += (downBend) * this.weights.knockdown;
             targetArmBase += (-1.0) * this.weights.knockdown;
         }
 

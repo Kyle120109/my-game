@@ -578,9 +578,9 @@ export function createModelLibrary() {
 
     // --- 5x Complexity: Advanced Rigging & Detailed Armor ---
 
-    // 1. Pelvis / Hips (Base of the spine)
+    // The rider's pelvis (root of the rig) - moved back to actually sit on the seat!
     const pelvisPivot = new THREE.Group();
-    pelvisPivot.position.set(0, 0.04, -0.06);
+    pelvisPivot.position.set(0, 0, -0.2);
     riderRoot.add(pelvisPivot);
     const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.2, 0.18, 16, 32), mats.cloth);
     const belt = new THREE.Mesh(new THREE.TorusGeometry(0.21, 0.04, 12, 32), mats.darkRubber);
@@ -678,12 +678,12 @@ export function createModelLibrary() {
       pauldron.rotation.z = side * Math.PI / 4;
       pauldron.position.y = 0.05;
 
-      const upperArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.28, 12, 24), mats.cloth);
-      upperArm.position.set(0, -0.14, 0);
+      const upperArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.40, 12, 24), mats.cloth);
+      upperArm.position.set(0, -0.20, 0);
 
       // Upper arm twist joint
       const upperTwist = new THREE.Group();
-      upperTwist.position.set(0, -0.28, 0);
+      upperTwist.position.set(0, -0.40, 0);
       shoulderPivot.add(pauldron, upperArm, upperTwist);
 
       const elbowPivot = new THREE.Group();
@@ -692,12 +692,12 @@ export function createModelLibrary() {
       elbowPad.position.set(0, 0, -0.06);
       upperTwist.add(elbowPivot);
 
-      const lowerArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.26, 12, 24), mats.skin);
-      lowerArm.position.set(0, -0.13, 0);
+      const lowerArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.40, 12, 24), mats.skin);
+      lowerArm.position.set(0, -0.20, 0);
 
       // Lower arm twist / Forearm
       const lowerTwist = new THREE.Group();
-      lowerTwist.position.set(0, -0.26, 0);
+      lowerTwist.position.set(0, -0.40, 0);
       elbowPivot.add(elbowPad, lowerArm, lowerTwist);
 
       const wristPivot = new THREE.Group();
@@ -748,11 +748,11 @@ export function createModelLibrary() {
       hipPivot.position.set(side * 0.12, -0.05, 0);
       pelvisPivot.add(hipPivot);
 
-      const upperLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.36, 16, 24), mats.cloth);
-      upperLeg.position.set(0, -0.18, 0);
+      const upperLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.46, 16, 24), mats.cloth);
+      upperLeg.position.set(0, -0.23, 0);
 
       const upperLegTwist = new THREE.Group();
-      upperLegTwist.position.set(0, -0.36, 0);
+      upperLegTwist.position.set(0, -0.46, 0);
       hipPivot.add(upperLeg, upperLegTwist);
 
       const kneePivot = new THREE.Group();
@@ -760,11 +760,11 @@ export function createModelLibrary() {
       kneePad.position.set(0, 0, 0.06);
       upperLegTwist.add(kneePivot);
 
-      const lowerLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.34, 16, 24), mats.cloth);
-      lowerLeg.position.set(0, -0.17, 0);
+      const lowerLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.46, 16, 24), mats.cloth);
+      lowerLeg.position.set(0, -0.23, 0);
 
       const lowerLegTwist = new THREE.Group();
-      lowerLegTwist.position.set(0, -0.34, 0);
+      lowerLegTwist.position.set(0, -0.46, 0);
       kneePivot.add(kneePad, lowerLeg, lowerLegTwist);
 
       const anklePivot = new THREE.Group();
