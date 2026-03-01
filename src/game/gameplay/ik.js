@@ -19,7 +19,7 @@ const tempDir = new THREE.Vector3();
  * @param {number} boneL2 - Length of lower bone
  * @param {number} side - 1 for right, -1 for left
  */
-export function solveTwoBoneIK(rootJoint, midJoint, effectorJoint, targetWorldPos, boneL1, boneL2, side) {
+export function solveTwoBoneIK(rootJoint, midJoint, effectorJoint, targetWorldPos, boneL1, boneL2, side, invertBend = false) {
     // Note: The previous mathematical IK failed because the procedural cylinders in Three.js
     // do not have standard strictly-aligned +Y forward bones like standard GLTF rigs.
     // Instead of fighting global coordinate space, we will use a heuristic local-space approach
@@ -47,13 +47,13 @@ export function solveTwoBoneIK(rootJoint, midJoint, effectorJoint, targetWorldPo
     const sqL2 = boneL2 * boneL2;
 
     // Angle at elbow
-    let cosBeta = (sqL1 + sqL2 - sqDist) / (2 * boneL1 * boneL2);
+    let cosBeta = (sqDist - sqL1 - sqL2) / (-2 * boneL1 * boneL2); // simplified rule of cosines
     cosBeta = THREE.MathUtils.clamp(cosBeta, -1, 1);
     const beta = Math.acos(cosBeta);
 
     // Bend the elbow. The procedural rig bends elbows by making their X rotation negative.
     // beta is the interior angle. A completely straight arm has rotation 0 (beta = PI).
-    const elbowBend = -(Math.PI - beta);
+    const elbowBend = invertBend ? (Math.PI - beta) : -(Math.PI - beta);
     midJoint.rotation.set(elbowBend, 0, side * 0.05);
 
     // 3. Aim the Shoulder
@@ -73,7 +73,7 @@ export function solveTwoBoneIK(rootJoint, midJoint, effectorJoint, targetWorldPo
     // Apply rotations
     // The procedural rig uses Euler(X, Y, Z) where X is pitch and Z is roll (side to side).
     // We blend the aiming pitch with the IK alpha compensation.
-    rootJoint.rotation.x = pitch - alpha;
+    rootJoint.rotation.x = invertBend ? (pitch + alpha) : (pitch - alpha);
 
     // Smoothly apply yaw (bringing arm inwards toward center)
     // The bars are in front, so arm swings forward and slightly to the center

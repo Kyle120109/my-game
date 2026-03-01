@@ -425,28 +425,39 @@ export function createModelLibrary() {
     shockPivot.add(shock);
 
     const handleBarRoot = new THREE.Group();
-    handleBarRoot.position.set(0, 1.18, 0.9);
+    // Move pivot down into the frame head tube area
+    handleBarRoot.position.set(0, 0.98, 0.82);
+    // Realistic bicycle caster angle (tilted ~22 degrees backward)
+    handleBarRoot.rotation.x = -0.38;
     bikeRoot.add(handleBarRoot);
-    const stem = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.18), mats.chrome);
-    stem.position.set(0, 0, 0.09);
+
+    const stem = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.16), mats.chrome);
+    stem.position.set(0, 0.2, 0.04);
     handleBarRoot.add(stem);
+
+    const handleWrapper = new THREE.Group();
+    handleWrapper.position.set(0, 0.2, 0.08);
+    // Counter rotation so the handlebar stays generally flat relative to ground
+    handleWrapper.rotation.x = 0.38;
+    handleBarRoot.add(handleWrapper);
+
     const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.037, 0.037, 0.76, 20), mats.chrome);
     handle.rotation.z = Math.PI / 2;
-    handle.position.z = 0.18;
-    handleBarRoot.add(handle);
+    handleWrapper.add(handle);
     const gripGeo = new THREE.CylinderGeometry(0.052, 0.052, 0.17, 16);
     const gripL = new THREE.Mesh(gripGeo, mats.darkRubber);
     gripL.rotation.z = Math.PI / 2;
-    gripL.position.set(-0.33, 0, 0.18);
+    gripL.position.set(-0.33, 0, 0);
     const gripR = gripL.clone();
-    gripR.position.set(0.33, 0, 0.18);
-    handleBarRoot.add(gripL, gripR);
+    gripR.position.set(0.33, 0, 0);
+    handleWrapper.add(gripL, gripR);
 
+    // Fork now natively inherits the realistic tilt of the steering axis
     const forkPivot = new THREE.Group();
-    forkPivot.position.set(0, -0.2, 0.1); // Drop the fork below the handlebar
+    forkPivot.position.set(0, 0, 0);
     handleBarRoot.add(forkPivot);
     const forkLeft = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 1.1, 14), mats.chrome);
-    forkLeft.position.set(-0.12, -0.45, 0.02); // Midpoint of fork
+    forkLeft.position.set(-0.12, -0.45, 0);
     const forkRight = forkLeft.clone();
     forkRight.position.x = 0.12;
     forkPivot.add(forkLeft, forkRight);
@@ -482,7 +493,8 @@ export function createModelLibrary() {
     addSpokes(rearWheelVisual, 0.44, 0, 8, mats.chrome);
 
     const frontWheelMount = new THREE.Group();
-    frontWheelMount.position.set(0, -0.93, 0.02); // Handlebar at 1.18, pivot at -0.2 -> 0.98. Minus 0.93 -> global 0.05
+    // Straight down the angled fork axis so it touches ground (Y=0.05)
+    frontWheelMount.position.set(0, -1.0, 0);
     forkPivot.add(frontWheelMount);
     const frontWheelSpin = new THREE.Group();
     frontWheelMount.add(frontWheelSpin);
@@ -795,6 +807,8 @@ export function createModelLibrary() {
       rearWheelSpin,
       shieldOrbs,
       crankRoot,
+      pedalR: pedalA,
+      pedalL: pedalB,
       rig: {
         // Core Body
         spinePivot: pelvisPivot, // Fallback for old animations

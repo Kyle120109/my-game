@@ -111,6 +111,8 @@ export function createEntitiesSystem({ modelLibrary }) {
       frontWheel: model.frontWheelSpin ?? model.frontWheel,
       shieldOrbs: model.shieldOrbs,
       crankRoot: model.crankRoot,
+      pedalL: model.pedalL,
+      pedalR: model.pedalR,
       gripL: model.gripL,
       gripR: model.gripR,
       rig: model.rig,
@@ -208,7 +210,6 @@ export function createEntitiesSystem({ modelLibrary }) {
 
     const steerAmount = THREE.MathUtils.clamp(racer.steer * 0.56, -0.54, 0.54);
     racer.handleBarRoot.rotation.y = steerAmount;
-    racer.forkPivot.rotation.y = steerAmount;
     racer.crankRoot.rotation.x = racer.pedalPhase;
     racer.rearSwingPivot.rotation.x = THREE.MathUtils.clamp(Math.sin(racer.pedalPhase * 0.5) * 0.08 + racer.brake * 0.05, -0.22, 0.25);
     racer.shockPivot.scale.y = THREE.MathUtils.lerp(racer.shockPivot.scale.y, 0.92 + Math.abs(Math.sin(racer.pedalPhase)) * 0.12, 1 - Math.exp(-dt * 8));
@@ -390,9 +391,9 @@ export function createEntitiesSystem({ modelLibrary }) {
       // IMPORTANT: Only run IK when NOT punching. The punch animation sets
       // shoulder/elbow/wrist rotations and the IK would silently overwrite them.
       if (punchAmount === 0 && racer.gripL && racer.gripR) {
-        // Grip points are children of the handlebar which may have moved this
-        // frame, so we need up-to-date world matrices before sampling positions.
-        racer.gripL.parent.updateWorldMatrix(true, false);
+        // Force fully updated world matrices down the entire group hierarchy
+        // This is crucial, otherwise the IK targets behind one frame or parent matrices
+        racer.group.updateMatrixWorld(true);
 
         const leftTarget = new THREE.Vector3();
         const rightTarget = new THREE.Vector3();
@@ -403,8 +404,8 @@ export function createEntitiesSystem({ modelLibrary }) {
         leftTarget.y += 0.05; leftTarget.z += 0.05; leftTarget.x -= 0.02;
         rightTarget.y += 0.05; rightTarget.z += 0.05; rightTarget.x += 0.02;
 
-        solveTwoBoneIK(racer.rig.leftShoulder, racer.rig.leftElbow, racer.rig.leftWrist, leftTarget, 0.38, 0.38, -1);
-        solveTwoBoneIK(racer.rig.rightShoulder, racer.rig.rightElbow, racer.rig.rightWrist, rightTarget, 0.38, 0.38, 1);
+        solveTwoBoneIK(racer.rig.leftShoulder, racer.rig.leftElbow, racer.rig.leftWrist, leftTarget, 0.28, 0.26, -1);
+        solveTwoBoneIK(racer.rig.rightShoulder, racer.rig.rightElbow, racer.rig.rightWrist, rightTarget, 0.28, 0.26, 1);
 
         // Lock wrists forward onto grips
         racer.rig.leftWrist.rotation.set(-0.2, steerAmount * 0.8, -0.2);
@@ -429,34 +430,27 @@ export function createEntitiesSystem({ modelLibrary }) {
     }
 
     if (!isRagdoll) {
-      // Leg IK Absorption: Knees bend more when rear suspension compresses (hips drop)
-      const legAbsorb = Math.max(0, racer.suspension.rearCompression * 1.2);
+      if (racer.pedalL && racer.pedalR) {
+        // Use true IK for the legs, tracking the rotating pedals exactly
+        racer.pedalL.parent.updateMatrixWorld(true);
 
-      const legPower = pose.legPower;
-      const cadence = racer.pedalPhase;
-      // Base pedal cycle - Hips rotate backward (positive X) to push pedals down/forward
-      let leftHip = Math.sin(cadence) * 0.76 * legPower + 0.16;
-      let rightHip = Math.sin(cadence + Math.PI) * 0.76 * legPower + 0.16;
+        const leftFootTarget = new THREE.Vector3();
+        const rightFootTarget = new THREE.Vector3();
+        racer.pedalL.getWorldPosition(leftFootTarget);
+        racer.pedalR.getWorldPosition(rightFootTarget);
 
-      // Knees bend backward relative to hips (negative X). 
-      // The original math pushed knee positive, but procedural cylinders usually bend negative to fold back.
-      let leftKnee = -Math.max(0, -Math.sin(cadence + 0.2)) * 1.4 * legPower - 0.2;
-      let rightKnee = -Math.max(0, -Math.sin(cadence + Math.PI + 0.2)) * 1.4 * legPower - 0.2;
+        // Nudge feet to sit ON the pedal instead of exactly inside it
+        leftFootTarget.y += 0.08;
+        rightFootTarget.y += 0.08;
 
-      // Apply absorption overrides
-      leftHip -= legAbsorb * 0.8;
-      rightHip -= legAbsorb * 0.8;
-      leftKnee -= legAbsorb * 1.5;
-      rightKnee -= legAbsorb * 1.5;
+        // Legs bend backwards -> so invertBend = true.
+        solveTwoBoneIK(racer.rig.leftHip, racer.rig.leftKnee, racer.rig.leftAnkle, leftFootTarget, 0.36, 0.34, -1, true);
+        solveTwoBoneIK(racer.rig.rightHip, racer.rig.rightKnee, racer.rig.rightAnkle, rightFootTarget, 0.36, 0.34, 1, true);
 
-      racer.rig.leftHip.rotation.x = leftHip;
-      racer.rig.rightHip.rotation.x = rightHip;
-      racer.rig.leftKnee.rotation.x = leftKnee;
-      racer.rig.rightKnee.rotation.x = rightKnee;
-
-      // Ankles compensate to keep feet flat on pedals
-      racer.rig.leftAnkle.rotation.x = THREE.MathUtils.lerp(racer.rig.leftAnkle.rotation.x, -leftHip * 0.54 + 0.18 + legAbsorb * 0.4, 1 - Math.exp(-dt * 12));
-      racer.rig.rightAnkle.rotation.x = THREE.MathUtils.lerp(racer.rig.rightAnkle.rotation.x, -rightHip * 0.54 + 0.18 + legAbsorb * 0.4, 1 - Math.exp(-dt * 12));
+        // Lock ankles to be relatively flat on the pedals
+        racer.rig.leftAnkle.rotation.set(0.1, 0, 0);
+        racer.rig.rightAnkle.rotation.set(0.1, 0, 0);
+      }
 
       if (racer.rig.leftUpperLegTwist) {
         racer.rig.leftUpperLegTwist.rotation.set(0, 0, 0);
@@ -464,9 +458,7 @@ export function createEntitiesSystem({ modelLibrary }) {
         racer.rig.rightUpperLegTwist.rotation.set(0, 0, 0);
         racer.rig.rightLowerLegTwist.rotation.set(0, 0, 0);
       }
-    }
-
-    if (isDown) {
+    } if (isDown) {
       // Fast snap toward full tilt on knockdown
       const tiltFactor = 1 - Math.exp(-dt * 18);
       racer.bikeRoot.rotation.z = THREE.MathUtils.lerp(racer.bikeRoot.rotation.z, racer.downSide * 1.05, tiltFactor);
