@@ -71,17 +71,33 @@ export function solveTwoBoneIK(rootJoint, midJoint, effectorJoint, targetWorldPo
     const alpha = Math.acos(cosAlpha);
 
     // Apply true 3D spherical rotations. 
+    // The previous math incorrectly had a positive pitch instead of negative, 
+    // pointing the arm completely backwards away from the target!
+    const aimPitch = -pitch;
+
     // Using YXZ order means it locally pitches (X), then yaws (Y), perfectly tracking the grip.
     rootJoint.rotation.order = 'YXZ';
 
     // 100% accurate Yaw!
     rootJoint.rotation.y = yaw;
-    // Pitch with IK alpha compensation
-    rootJoint.rotation.x = invertBend ? (pitch + alpha) : (pitch - alpha);
+    // Pitch with IK alpha compensation (corrected sign logic)
+    rootJoint.rotation.x = invertBend ? (aimPitch - alpha) : (aimPitch + alpha);
 
-    // Stabilize roll. Elbows out for arms (depending on side), knees neutral.
-    // Z rotation applies last in YXZ order.
-    rootJoint.rotation.z = side * 0.12;
+    // Stabilize roll. We MUST keep Euler Z neutral initially, 
+    // otherwise applying Z first rotates the aiming axis and entirely breaks the IK aim.
+    rootJoint.rotation.z = 0;
 
+    // Flare elbows natively without breaking wrist tracking.
+    // By rotating the entire shoulder around the target vector (tempDir), 
+    // the wrist stays perfectly in place while the elbow joint swings OUT!
+    if (side !== 0) {
+        // Only flare arms (invertBend = false) outwards (wide posture for mountain biking).
+        const rollAngle = invertBend ? 0 : side * 0.55;
+        if (rollAngle !== 0) {
+            tempDir.normalize();
+            const rollQuat = new THREE.Quaternion().setFromAxisAngle(tempDir, rollAngle);
+            rootJoint.quaternion.premultiply(rollQuat);
+        }
+    }
     // 4. Wrist lock (handled natively in entities.js)
 }
