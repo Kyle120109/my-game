@@ -70,15 +70,18 @@ export function solveTwoBoneIK(rootJoint, midJoint, effectorJoint, targetWorldPo
     cosAlpha = THREE.MathUtils.clamp(cosAlpha, -1, 1);
     const alpha = Math.acos(cosAlpha);
 
-    // Apply rotations
-    // The procedural rig uses Euler(X, Y, Z) where X is pitch and Z is roll (side to side).
-    // We blend the aiming pitch with the IK alpha compensation.
+    // Apply true 3D spherical rotations. 
+    // Using YXZ order means it locally pitches (X), then yaws (Y), perfectly tracking the grip.
+    rootJoint.rotation.order = 'YXZ';
+
+    // 100% accurate Yaw!
+    rootJoint.rotation.y = yaw;
+    // Pitch with IK alpha compensation
     rootJoint.rotation.x = invertBend ? (pitch + alpha) : (pitch - alpha);
 
-    // Smoothly apply yaw (bringing arm inwards toward center)
-    // The bars are in front, so arm swings forward and slightly to the center
-    rootJoint.rotation.z = side * (0.15 + (1.0 - (dist / maxReach)) * 0.2);
-    rootJoint.rotation.y = yaw * 0.5;
+    // Stabilize roll. Elbows out for arms (depending on side), knees neutral.
+    // Z rotation applies last in YXZ order.
+    rootJoint.rotation.z = side * 0.12;
 
     // 4. Wrist lock (handled natively in entities.js)
 }
