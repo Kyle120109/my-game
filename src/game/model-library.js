@@ -43,6 +43,7 @@ export function createModelLibrary() {
     getLavaModels: themes.getLavaModels,
     getNeonModels: themes.getNeonModels,
     getHarborModels: themes.getHarborModels,
+    makeContainer: themes.makeContainer,
     applyPickupModelType: pickups.applyPickupModelType,
     createPickupModel: pickups.createPickupModel,
     createDetailedBuildingModel: envCore.createDetailedBuildingModel,

@@ -47,8 +47,8 @@ export function createHarborEnvironmentBuilder({ modelLibrary, tempVec3A, tempVe
 
     const placeContainerStack = (x, z, hCount, yaw) => {
       const group = new THREE.Group();
-      if (modelLibrary && modelLibrary.getHarborModels) {
-        const makeContainer = modelLibrary.getHarborModels()[0];
+      if (modelLibrary && modelLibrary.makeContainer) {
+        const makeContainer = modelLibrary.makeContainer;
         const s = 2.45; // Scales length to ~12 units to match old
         const hUnit = s * 2.0; // Our detailed container is s * 2.0 tall
 
