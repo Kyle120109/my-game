@@ -215,14 +215,102 @@ export function createWorldSystem({ settings, levels, modelLibrary }) {
     const right = tempVec3B;
     const up = tempVec3C;
     buildOrthonormalFrame(tempVec3A, surfaceNormal(level, start.x, start.z), right, up, tempVec3A);
-
-    const platform = new THREE.Mesh(new THREE.BoxGeometry(level.routeHalfWidth * 2.7, 0.8, 9), new THREE.MeshStandardMaterial({ color: 0x37424c, roughness: 0.72 }));
-    platform.position.copy(start).addScaledVector(tempVec3A, -4.4).addScaledVector(up, 0.4);
     tempMat4.makeBasis(right, up, tempVec3A);
-    platform.quaternion.setFromRotationMatrix(tempMat4);
-    platform.receiveShadow = true;
-    platform.castShadow = true;
-    game.routeRoot.add(platform);
+
+    const gate = new THREE.Group();
+    gate.position.copy(start);
+    gate.quaternion.setFromRotationMatrix(tempMat4);
+
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.7, roughness: 0.4 });
+    const blueMat = new THREE.MeshStandardMaterial({ color: 0x0055ff, metalness: 0.5, roughness: 0.5 });
+    const redMat = new THREE.MeshStandardMaterial({ color: 0xd02020, roughness: 0.7 });
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x5a4a3a, roughness: 0.9 });
+
+    const deckDepth = 6;
+    const deckWidth = Math.max(18, level.routeHalfWidth * 2.2);
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(deckWidth, 0.2, deckDepth), woodMat);
+    deck.position.set(0, 0.1, -3.5);
+    deck.receiveShadow = true;
+    deck.castShadow = true;
+    gate.add(deck);
+
+    const pillarGeom = new THREE.CylinderGeometry(0.15, 0.15, 4.5, 8);
+    for (const x of [-deckWidth / 2 + 0.5, deckWidth / 2 - 0.5]) {
+      for (const z of [-6.0, -1.0]) {
+        const pillar = new THREE.Mesh(pillarGeom, metalMat);
+        pillar.position.set(x, 2.25, z);
+        pillar.castShadow = true;
+        gate.add(pillar);
+
+        const foot = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.6), blueMat);
+        foot.position.set(x, 0.2, z);
+        gate.add(foot);
+      }
+    }
+
+    const beamGeom = new THREE.CylinderGeometry(0.15, 0.15, deckWidth, 8);
+    beamGeom.rotateZ(Math.PI / 2);
+    for (const z of [-6.0, -1.0]) {
+      const beam = new THREE.Mesh(beamGeom, metalMat);
+      beam.position.set(0, 4.35, z);
+      beam.castShadow = true;
+      gate.add(beam);
+    }
+    const sideBeamGeom = new THREE.CylinderGeometry(0.12, 0.12, 5, 8);
+    sideBeamGeom.rotateX(Math.PI / 2);
+    for (const x of [-deckWidth / 2 + 0.5, deckWidth / 2 - 0.5]) {
+      const sbeam = new THREE.Mesh(sideBeamGeom, metalMat);
+      sbeam.position.set(x, 4.35, -3.5);
+      sbeam.castShadow = true;
+      gate.add(sbeam);
+    }
+
+    const banner = new THREE.Mesh(new THREE.BoxGeometry(deckWidth - 1, 1.2, 0.1), redMat);
+    banner.position.set(0, 3.8, -1.0);
+    banner.castShadow = true;
+    gate.add(banner);
+
+    const pipeGeom = new THREE.CylinderGeometry(0.06, 0.06, 2.0, 8);
+    const vertGeom = new THREE.CylinderGeometry(0.06, 0.06, 1.0, 8);
+    const jointGeom = new THREE.SphereGeometry(0.09, 8, 8);
+    pipeGeom.rotateX(Math.PI / 2);
+
+    for (let i = -5; i <= 4; i++) {
+      const px = i * 1.8 + 0.9;
+      const pGroup = new THREE.Group();
+
+      const hBar = new THREE.Mesh(pipeGeom, metalMat);
+      hBar.position.set(0, 1.0, -4.2);
+      hBar.castShadow = true;
+      pGroup.add(hBar);
+
+      const vBar1 = new THREE.Mesh(vertGeom, metalMat);
+      vBar1.position.set(0, 0.5, -3.2);
+      vBar1.castShadow = true;
+      pGroup.add(vBar1);
+
+      const vBar2 = new THREE.Mesh(vertGeom, metalMat);
+      vBar2.position.set(0, 0.5, -5.2);
+      vBar2.castShadow = true;
+      pGroup.add(vBar2);
+
+      const j1 = new THREE.Mesh(jointGeom, blueMat);
+      j1.position.set(0, 1.0, -3.2);
+      const j2 = new THREE.Mesh(jointGeom, blueMat);
+      j2.position.set(0, 1.0, -5.2);
+      pGroup.add(j1, j2);
+
+      pGroup.position.set(px, 0, 0);
+      gate.add(pGroup);
+    }
+
+    const line = new THREE.Mesh(new THREE.PlaneGeometry(deckWidth, 0.4), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1 }));
+    line.rotation.x = -Math.PI / 2;
+    line.position.set(0, 0.22, -0.6);
+    line.receiveShadow = true;
+    gate.add(line);
+
+    game.routeRoot.add(gate);
   }
 
   return {
