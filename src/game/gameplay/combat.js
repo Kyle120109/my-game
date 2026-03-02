@@ -68,7 +68,8 @@ export function createCombatSystem({ settings, fx, setRaceMessage, tempVec3A }) 
       hits += 1;
       fx.spawnBurst(game, target.position, 0xff9f8f, 11, 0.9, 5.2);
     }
-    fx.playPunchSound(game, hits > 0);
+    fx.playPunchSwingSound(game);
+    if (hits > 0) fx.playPunchHitSound(game);
     if (attacker.isPlayer && game.state === STATE.RACING) setRaceMessage(game, hits > 0 ? `拳击命中 x${hits}` : "挥空", hits > 0 ? 0.72 : 0.42);
     if (hits > 0) {
       attacker.hits += hits;
@@ -94,9 +95,11 @@ export function createCombatSystem({ settings, fx, setRaceMessage, tempVec3A }) 
       target.ragdoll.activate(target.velocity);
     }
 
-    // Crash VFX: burst + hit sound
+    // Crash VFX
     fx.spawnBurst(game, target.position, 0xff6633, 14, 1.0, 5.5);
-    fx.playHitSound(game);
+    // Generic physics knockdown sound (specific items will trigger their own beforehand)
+    // Removed old playHitSound, relying on item/bump specific sounds or a generic crunch if needed.
+    // We'll leave it out here so specific triggers drive the audio.
 
     if (target.shieldTimer > 0 && target.shieldHits > 0) {
       target.shieldHits -= 1;
@@ -107,7 +110,7 @@ export function createCombatSystem({ settings, fx, setRaceMessage, tempVec3A }) 
       target.velocity.y = Math.max(target.velocity.y, 1.1 + power * 0.9);
       // Gold burst for shield absorb
       fx.spawnBurst(game, target.position, 0xffd54f, 12, 1.0, 4.5);
-      fx.playHitSound(game);
+      fx.playShieldAbsorbSound(game);
       if (target.isPlayer && settings.shake) game.cameraShake = Math.max(game.cameraShake, 0.18 * power);
       // If all shields broken, clear shield
       if (target.shieldHits <= 0) {

@@ -84,16 +84,27 @@ export function createFxAudioSystem({ settings }) {
   function updateAudio(game, dt) {
     if (!game.audio.ctx || !game.player) return;
 
+    // Add dirt noise support
     const speed = horizontalSpeed(game.player.velocity);
-    game.audio.windTarget = game.state === STATE.RACING || game.state === STATE.FINISHED
-      ? THREE.MathUtils.clamp(speed / 35, 0, 1)
-      : 0;
+    const speedVal = THREE.MathUtils.clamp(speed / 35, 0, 1);
 
+    // Check if off-road
+    const isOffRoad = game.player.trackDist > game.activeLevel.routeHalfWidth * 0.9 && game.player.grounded;
+
+    game.audio.windTarget = game.state === STATE.RACING || game.state === STATE.FINISHED ? speedVal : 0;
     game.audio.windCurrent = damp(game.audio.windCurrent, game.audio.windTarget, 2.6, dt);
 
     const now = game.audio.ctx.currentTime;
-    game.audio.windGain.gain.setTargetAtTime(game.audio.windCurrent * 0.24, now, 0.1);
-    game.audio.windFilter.frequency.setTargetAtTime(320 + game.audio.windCurrent * 1800, now, 0.08);
+
+    if (isOffRoad) {
+      // Gritty, lower-frequency noise floor for dirt
+      game.audio.windGain.gain.setTargetAtTime(game.audio.windCurrent * 0.45, now, 0.1);
+      game.audio.windFilter.frequency.setTargetAtTime(180 + game.audio.windCurrent * 800, now, 0.08);
+    } else {
+      // Smooth high wind for asphalt
+      game.audio.windGain.gain.setTargetAtTime(game.audio.windCurrent * 0.24, now, 0.1);
+      game.audio.windFilter.frequency.setTargetAtTime(320 + game.audio.windCurrent * 1800, now, 0.08);
+    }
   }
 
   function playTone(game, freq, duration, gain = 0.15, type = "sine") {
@@ -135,28 +146,7 @@ export function createFxAudioSystem({ settings }) {
     osc.stop(now + duration + 0.03);
   }
 
-  function playPunchSound(game, hit) {
-    playTone(game, hit ? 180 : 120, 0.09, hit ? 0.14 : 0.08, "square");
-    if (hit) playTone(game, 72, 0.14, 0.11, "triangle");
-  }
-
-  function playHitSound(game) {
-    playSweep(game, 420, 110, 0.13, 0.16, "square");
-  }
-
-  function playBoostSound(game) {
-    playSweep(game, 280, 960, 0.2, 0.15, "sawtooth");
-  }
-
-  function playCheckpointSound(game) {
-    playTone(game, 940, 0.08, 0.1, "triangle");
-    playTone(game, 1320, 0.09, 0.09, "triangle");
-  }
-
-  function playPickupSound(game) {
-    playTone(game, 700, 0.08, 0.09, "sine");
-    playTone(game, 980, 0.08, 0.08, "sine");
-  }
+  // Removed generic playHitSound, playBoostSound, playPickupSound, playPunchSound (will be replaced by granular ones)
 
   function playShockSound(game) {
     playSweep(game, 1800, 280, 0.18, 0.12, "square");
@@ -189,20 +179,138 @@ export function createFxAudioSystem({ settings }) {
     setTimeout(() => playTone(game, 680, 0.22, 0.12, "triangle"), 120);
   }
 
+  // === NEW DIVERSE INTERACTION SOUNDS ===
+
+  function playRampJumpSound(game) {
+    // A sweeping, airy sound distinct from the aggressive turbo boost
+    playSweep(game, 150, 600, 0.35, 0.12, "triangle");
+    playTone(game, 420, 0.2, 0.08, "sine");
+  }
+
+  function playShieldAbsorbSound(game) {
+    // A crystalline/metallic chime for absorbing damage
+    playTone(game, 1200, 0.05, 0.12, "sine");
+    setTimeout(() => playTone(game, 1600, 0.08, 0.10, "sine"), 40);
+    setTimeout(() => playTone(game, 2100, 0.15, 0.08, "triangle"), 90);
+  }
+
+  // === GRANULAR PICKUP SOUNDS ===
+  function playPickupTurboSound(game) {
+    playSweep(game, 400, 1200, 0.15, 0.1, "triangle");
+  }
+  function playPickupBashSound(game) {
+    playTone(game, 180, 0.15, 0.12, "square");
+  }
+  function playPickupShockSound(game) {
+    playTone(game, 1500, 0.05, 0.1, "sawtooth");
+    setTimeout(() => playTone(game, 2000, 0.08, 0.1, "square"), 40);
+  }
+  function playPickupShieldSound(game) {
+    playTone(game, 500, 0.1, 0.1, "sine");
+    playTone(game, 800, 0.2, 0.1, "sine");
+  }
+  function playPickupTrapSound(game) {
+    playSweep(game, 600, 300, 0.1, 0.1, "square");
+  }
+  function playPickupBananaSound(game) {
+    playSweep(game, 300, 500, 0.12, 0.12, "sine");
+  }
+  function playPickupBombSound(game) {
+    playTone(game, 300, 0.05, 0.1, "triangle");
+    setTimeout(() => playTone(game, 300, 0.05, 0.1, "triangle"), 80);
+  }
+
+  // === GRANULAR USAGE SOUNDS ===
+  function playUseTurboSound(game) {
+    playSweep(game, 280, 1400, 0.3, 0.18, "sawtooth");
+  }
+  function playUseBashSound(game) {
+    playSweep(game, 120, 450, 0.25, 0.18, "sawtooth");
+    setTimeout(() => playTone(game, 280, 0.15, 0.15, "square"), 150);
+  }
+  function playUseShockSound(game) {
+    playSweep(game, 2400, 800, 0.4, 0.18, "square");
+  }
+  function playUseShieldSound(game) {
+    playSweep(game, 400, 1200, 0.2, 0.12, "sine");
+  }
+  function playUseTrapSound(game) {
+    playSweep(game, 240, 90, 0.15, 0.15, "triangle");
+    playTone(game, 120, 0.08, 0.1, "square");
+  }
+  function playUseBananaSound(game) {
+    playSweep(game, 300, 150, 0.18, 0.14, "sine");
+  }
+  function playUseBombSound(game) {
+    playSweep(game, 400, 150, 0.2, 0.16, "sawtooth");
+  }
+
+  // === GRANULAR TRIGGER/HIT SOUNDS ===
+  function playHitTrapSound(game) {
+    playSweep(game, 800, 200, 0.15, 0.16, "sawtooth");
+    playTone(game, 120, 0.1, 0.12, "square");
+    setTimeout(() => playSweep(game, 500, 100, 0.1, 0.12, "square"), 50);
+  }
+  function playHitBananaSound(game) {
+    playSweep(game, 600, 200, 0.25, 0.15, "sine");
+    setTimeout(() => playTone(game, 180, 0.1, 0.12, "triangle"), 150);
+  }
+  function playHitBashSound(game) {
+    playSweep(game, 420, 90, 0.15, 0.2, "square");
+    playTone(game, 80, 0.15, 0.18, "sawtooth");
+  }
+  function playHitShockSound(game) {
+    playSweep(game, 1800, 280, 0.18, 0.14, "square");
+    setTimeout(() => playTone(game, 600, 0.1, 0.1, "sawtooth"), 100);
+  }
+
+  // === MELEE SOUNDS ===
+  function playPunchSwingSound(game) {
+    playSweep(game, 220, 380, 0.12, 0.08, "triangle");
+  }
+  function playPunchHitSound(game) {
+    playSweep(game, 380, 120, 0.1, 0.18, "square");
+    playTone(game, 90, 0.1, 0.15, "triangle");
+  }
+
   return {
     ensureAudio,
     updateParticles,
     spawnBurst,
     updateAudio,
-    playPunchSound,
-    playHitSound,
-    playBoostSound,
-    playCheckpointSound,
-    playPickupSound,
     playShockSound,
     playExplosionSound,
     playRespawnSound,
     playStartSound,
     playFinishSound,
+    playCheckpointSound,
+
+    playRampJumpSound,
+    playShieldAbsorbSound,
+    playObstacleBumpSound,
+
+    playPickupTurboSound,
+    playPickupBashSound,
+    playPickupShockSound,
+    playPickupShieldSound,
+    playPickupTrapSound,
+    playPickupBananaSound,
+    playPickupBombSound,
+
+    playUseTurboSound,
+    playUseBashSound,
+    playUseShockSound,
+    playUseShieldSound,
+    playUseTrapSound,
+    playUseBananaSound,
+    playUseBombSound,
+
+    playHitTrapSound,
+    playHitBananaSound,
+    playHitBashSound,
+    playHitShockSound,
+
+    playPunchSwingSound,
+    playPunchHitSound,
   };
 }

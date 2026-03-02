@@ -258,7 +258,7 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
       if (racer.isPlayer && game.state === STATE.RACING) {
         setRaceMessage(game, "BIG AIR", 0.7);
         if (game.simTime - game.lastBigAirSoundAt > PHYSICS.rampSoundCooldown) {
-          fx.playBoostSound(game);
+          fx.playRampJumpSound(game);
           game.lastBigAirSoundAt = game.simTime;
         }
         fx.spawnBurst(game, racer.position, 0xfff4bd, 16, 1.2, 6.8);
@@ -349,6 +349,11 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
         racer.velocity.x -= hitSpeed * nx * bounce * shieldScale;
         racer.velocity.z -= hitSpeed * nz * bounce * shieldScale;
         racer.velocity.multiplyScalar(slow);
+
+        if (racer.isPlayer && game.state !== STATE.MENU && Math.abs(hitSpeed) > 1.0) {
+          fx.playObstacleBumpSound(game, hitSpeed);
+        }
+
         if (isEdge) continue;
         const impactPower = Math.abs(hitSpeed) * (obstacle.crashWeight ?? 1.1) * shieldScale;
         const knockdownThreshold = isSoft ? 19 : 15.5;

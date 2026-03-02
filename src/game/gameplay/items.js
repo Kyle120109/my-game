@@ -518,13 +518,13 @@ export function createItemSystem({ fx, setRaceMessage, tempVec3A, tempVec3B, tem
           const owner = game.racers.find((entry) => entry.id === hazard.ownerId);
           if (owner && owner !== target) owner.hits += 1;
           fx.spawnBurst(game, target.position, 0xffec94, 14, 1, 4.8);
-          fx.playHitSound(game);
+          fx.playHitBananaSound(game);
         } else {
           applyKnockdown(game, target, tempVec3D, 0.92, true);
           const owner = game.racers.find((entry) => entry.id === hazard.ownerId);
           if (owner && owner !== target) owner.hits += 1;
           fx.spawnBurst(game, target.position, 0xffba8c, 14, 1, 4.8);
-          fx.playHitSound(game);
+          fx.playHitTrapSound(game);
         }
         triggered = true;
         break;
@@ -567,7 +567,18 @@ export function createItemSystem({ fx, setRaceMessage, tempVec3A, tempVec3B, tem
                 ? 0xffbd8e
                 : 0x8ff8ff;
         setRaceMessage(game, `获得道具: ${itemName(racer.itemType)}`, 0.9);
-        fx.playPickupSound(game);
+
+        switch (racer.itemType) {
+          case 'turbo': fx.playPickupTurboSound(game); break;
+          case 'bash': fx.playPickupBashSound(game); break;
+          case 'shock': fx.playPickupShockSound(game); break;
+          case 'shield': fx.playPickupShieldSound(game); break;
+          case 'trap': fx.playPickupTrapSound(game); break;
+          case 'banana': fx.playPickupBananaSound(game); break;
+          case 'bomb': fx.playPickupBombSound(game); break;
+          default: break; // fallback if needed
+        }
+
         fx.spawnBurst(game, crate.mesh.position, pickupColor, 14, 0.9, 4.6);
       }
     }
@@ -587,7 +598,7 @@ export function createItemSystem({ fx, setRaceMessage, tempVec3A, tempVec3B, tem
       racer.velocity.addScaledVector(forward, 14.5);
       racer.boostTimer = Math.max(racer.boostTimer, 1.35);
       fx.spawnBurst(game, racer.position, 0x8ffcff, 16, 1.2, 6.6);
-      fx.playBoostSound(game);
+      fx.playUseTurboSound(game);
     } else if (type === "bash") {
       let hits = 0;
       for (const target of game.racers) {
@@ -605,7 +616,9 @@ export function createItemSystem({ fx, setRaceMessage, tempVec3A, tempVec3B, tem
       }
       if (hits > 0) racer.hits += hits;
       fx.spawnBurst(game, racer.position, 0xffb08f, 18, 1.3, 6.8);
-      fx.playHitSound(game);
+      // Even if missed, play the windup/bash sound
+      fx.playUseBashSound(game);
+      if (hits > 0) fx.playHitBashSound(game);
     } else if (type === "shock") {
       let hits = 0;
       for (const target of game.racers) {
@@ -620,7 +633,8 @@ export function createItemSystem({ fx, setRaceMessage, tempVec3A, tempVec3B, tem
       }
       if (hits > 0) racer.hits += hits;
       fx.spawnBurst(game, racer.position, 0x91ddff, 24, 1.6, 7.8);
-      fx.playShockSound(game);
+      fx.playUseShockSound(game);
+      if (hits > 0) fx.playHitShockSound(game);
       // Per-target shock flash VFX
       for (const target of game.racers) {
         if (target === racer || target.respawnTimer > 0 || target.knockdownTimer > 0) continue;
@@ -634,22 +648,22 @@ export function createItemSystem({ fx, setRaceMessage, tempVec3A, tempVec3B, tem
       racer.shieldHits = 3;
       racer.boostTimer = Math.max(racer.boostTimer, 0.7);
       fx.spawnBurst(game, racer.position, 0xffd97b, 26, 1.5, 5.4);
-      fx.playPickupSound(game);
+      fx.playUseShieldSound(game);
     } else if (type === "trap") {
       const dropPos = racer.position.clone().addScaledVector(forward, -2.7);
       spawnGroundHazard(game, "trap", dropPos, racer.id, false);
       fx.spawnBurst(game, dropPos, 0xffb688, 14, 0.9, 3.8);
-      fx.playPickupSound(game);
+      fx.playUseTrapSound(game);
     } else if (type === "banana") {
       const target = findFrontItemTarget(game, racer);
       spawnTrackingProjectile(game, racer, "banana", target);
       fx.spawnBurst(game, racer.position.clone().addScaledVector(forward, 1.1), 0xffea8a, 8, 0.7, 3.1);
-      fx.playPickupSound(game);
+      fx.playUseBananaSound(game);
     } else if (type === "bomb") {
       const target = findFrontItemTarget(game, racer);
       spawnTrackingProjectile(game, racer, "bomb", target);
       fx.spawnBurst(game, racer.position.clone().addScaledVector(forward, 1.1), 0xffa47a, 10, 0.8, 3.6);
-      fx.playHitSound(game);
+      fx.playUseBombSound(game);
     }
     if (racer.isPlayer && game.state === STATE.RACING) setRaceMessage(game, `使用道具: ${itemName(type)}`, 0.72);
     return true;
