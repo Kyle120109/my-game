@@ -181,96 +181,144 @@ export function createFxAudioSystem({ settings }) {
 
   // === NEW DIVERSE INTERACTION SOUNDS ===
 
+  function playCheckpointSound(game) {
+    // Crisp, clear "Ding" like a coin or bell
+    playTone(game, 1200, 0.3, 0.25, "sine");
+    setTimeout(() => playTone(game, 1800, 0.4, 0.15, "sine"), 40);
+  }
+
   function playRampJumpSound(game) {
-    // A sweeping, airy sound distinct from the aggressive turbo boost
-    playSweep(game, 150, 600, 0.35, 0.12, "triangle");
-    playTone(game, 420, 0.2, 0.08, "sine");
+    // A dramatic, airy "whoosh-up"
+    playSweep(game, 200, 800, 0.45, 0.15, "triangle");
+    playTone(game, 600, 0.3, 0.08, "sine");
   }
 
   function playShieldAbsorbSound(game) {
-    // A crystalline/metallic chime for absorbing damage
-    playTone(game, 1200, 0.05, 0.12, "sine");
-    setTimeout(() => playTone(game, 1600, 0.08, 0.10, "sine"), 40);
-    setTimeout(() => playTone(game, 2100, 0.15, 0.08, "triangle"), 90);
+    // A heavy crystalline deflection chime
+    playTone(game, 1800, 0.05, 0.2, "sine");
+    setTimeout(() => playTone(game, 1400, 0.08, 0.15, "triangle"), 30);
+    setTimeout(() => playTone(game, 800, 0.2, 0.12, "sine"), 80);
   }
 
-  // === GRANULAR PICKUP SOUNDS ===
+  function playObstacleBumpSound(game, hitSpeed) {
+    // A dull thud scaling with speed
+    const intensity = THREE.MathUtils.clamp(Math.abs(hitSpeed) * 0.02, 0.05, 0.25);
+    playSweep(game, 160, 30, 0.15, intensity, "square");
+    playTone(game, 60, 0.12, intensity * 0.9, "triangle");
+  }
+
+  // === EXTREMELY DISTINCT PICKUP SOUNDS ===
   function playPickupTurboSound(game) {
-    playSweep(game, 400, 1200, 0.15, 0.1, "triangle");
+    // Fast double rev (vroom vroom)
+    playSweep(game, 300, 900, 0.1, 0.15, "sawtooth");
+    setTimeout(() => playSweep(game, 300, 1100, 0.1, 0.15, "sawtooth"), 120);
   }
   function playPickupBashSound(game) {
-    playTone(game, 180, 0.15, 0.12, "square");
+    // Heavy, low double-thud
+    playTone(game, 110, 0.08, 0.2, "square");
+    setTimeout(() => playTone(game, 90, 0.1, 0.2, "square"), 100);
   }
   function playPickupShockSound(game) {
-    playTone(game, 1500, 0.05, 0.1, "sawtooth");
-    setTimeout(() => playTone(game, 2000, 0.08, 0.1, "square"), 40);
+    // Rapid, jittery static sparks
+    playTone(game, 2500, 0.03, 0.15, "square");
+    setTimeout(() => playTone(game, 1800, 0.03, 0.15, "sawtooth"), 40);
+    setTimeout(() => playTone(game, 3200, 0.03, 0.15, "square"), 80);
+    setTimeout(() => playTone(game, 1400, 0.05, 0.15, "sawtooth"), 120);
   }
   function playPickupShieldSound(game) {
-    playTone(game, 500, 0.1, 0.1, "sine");
-    playTone(game, 800, 0.2, 0.1, "sine");
+    // Harmonic, consonant chord (C major eq)
+    playTone(game, 523, 0.2, 0.12, "sine"); // C5
+    playTone(game, 659, 0.2, 0.10, "sine"); // E5
+    playTone(game, 783, 0.2, 0.08, "sine"); // G5
   }
   function playPickupTrapSound(game) {
-    playSweep(game, 600, 300, 0.1, 0.1, "square");
+    // Mechanical crossing clank
+    playSweep(game, 800, 300, 0.08, 0.15, "square");
+    setTimeout(() => playSweep(game, 200, 600, 0.08, 0.15, "triangle"), 40);
   }
   function playPickupBananaSound(game) {
-    playSweep(game, 300, 500, 0.12, 0.12, "sine");
+    // Classic goofy sliding "boing"
+    playSweep(game, 200, 1200, 0.2, 0.15, "sine");
   }
   function playPickupBombSound(game) {
-    playTone(game, 300, 0.05, 0.1, "triangle");
-    setTimeout(() => playTone(game, 300, 0.05, 0.1, "triangle"), 80);
+    // Ticking fuse warning
+    playTone(game, 3000, 0.03, 0.1, "square");
+    setTimeout(() => playTone(game, 3000, 0.03, 0.1, "square"), 150);
+    setTimeout(() => playTone(game, 3000, 0.03, 0.1, "square"), 300);
   }
 
-  // === GRANULAR USAGE SOUNDS ===
+  // === EXTREMELY DISTINCT USAGE SOUNDS ===
   function playUseTurboSound(game) {
-    playSweep(game, 280, 1400, 0.3, 0.18, "sawtooth");
+    // Massive, tearing jet engine roar
+    playSweep(game, 150, 2000, 0.6, 0.25, "sawtooth");
+    setTimeout(() => playSweep(game, 300, 1800, 0.5, 0.15, "square"), 100);
   }
   function playUseBashSound(game) {
-    playSweep(game, 120, 450, 0.25, 0.18, "sawtooth");
-    setTimeout(() => playTone(game, 280, 0.15, 0.15, "square"), 150);
+    // Sucking wind-up into devastating bass strike
+    playSweep(game, 80, 500, 0.3, 0.15, "square");
+    playSweep(game, 80, 500, 0.3, 0.15, "triangle");
+    setTimeout(() => playTone(game, 60, 0.25, 0.3, "square"), 300);
   }
   function playUseShockSound(game) {
-    playSweep(game, 2400, 800, 0.4, 0.18, "square");
+    // Terrifying global thunder/fry down-sweep
+    playSweep(game, 3500, 200, 0.8, 0.2, "square");
+    setTimeout(() => playSweep(game, 2800, 150, 0.6, 0.18, "sawtooth"), 150);
   }
   function playUseShieldSound(game) {
-    playSweep(game, 400, 1200, 0.2, 0.12, "sine");
+    // Ascending harmonic power-up
+    playSweep(game, 300, 700, 0.3, 0.15, "sine");
+    setTimeout(() => playSweep(game, 400, 800, 0.3, 0.12, "sine"), 100);
+    setTimeout(() => playSweep(game, 500, 900, 0.3, 0.1, "sine"), 200);
   }
   function playUseTrapSound(game) {
-    playSweep(game, 240, 90, 0.15, 0.15, "triangle");
-    playTone(game, 120, 0.08, 0.1, "square");
+    // Heavy trap setting into dirt/road
+    playSweep(game, 150, 40, 0.15, 0.2, "triangle");
+    playTone(game, 90, 0.1, 0.18, "square");
   }
   function playUseBananaSound(game) {
-    playSweep(game, 300, 150, 0.18, 0.14, "sine");
+    // Comical plunging drop
+    playSweep(game, 1000, 100, 0.3, 0.18, "sine");
   }
   function playUseBombSound(game) {
-    playSweep(game, 400, 150, 0.2, 0.16, "sawtooth");
+    // Throwing mortar whistle
+    playSweep(game, 1500, 400, 0.4, 0.15, "triangle");
+    setTimeout(() => playTone(game, 300, 0.1, 0.1, "sine"), 400); // Thud on land
   }
 
-  // === GRANULAR TRIGGER/HIT SOUNDS ===
+  // === EXTREMELY DISTINCT TRIGGER/HIT SOUNDS ===
   function playHitTrapSound(game) {
-    playSweep(game, 800, 200, 0.15, 0.16, "sawtooth");
-    playTone(game, 120, 0.1, 0.12, "square");
-    setTimeout(() => playSweep(game, 500, 100, 0.1, 0.12, "square"), 50);
+    // Vicious bone/metal crunch
+    playSweep(game, 900, 100, 0.15, 0.2, "sawtooth");
+    playSweep(game, 600, 50, 0.2, 0.18, "square");
+    setTimeout(() => playTone(game, 80, 0.15, 0.2, "triangle"), 50);
   }
   function playHitBananaSound(game) {
-    playSweep(game, 600, 200, 0.25, 0.15, "sine");
-    setTimeout(() => playTone(game, 180, 0.1, 0.12, "triangle"), 150);
+    // Crazy wobble slipping out of control
+    playSweep(game, 800, 400, 0.1, 0.18, "sine");
+    setTimeout(() => playSweep(game, 400, 900, 0.1, 0.18, "sine"), 100);
+    setTimeout(() => playSweep(game, 900, 300, 0.15, 0.18, "sine"), 200);
   }
   function playHitBashSound(game) {
-    playSweep(game, 420, 90, 0.15, 0.2, "square");
-    playTone(game, 80, 0.15, 0.18, "sawtooth");
+    // Pure blunt force trauma
+    playTone(game, 50, 0.2, 0.3, "square");
+    playSweep(game, 300, 50, 0.15, 0.2, "sawtooth");
   }
   function playHitShockSound(game) {
-    playSweep(game, 1800, 280, 0.18, 0.14, "square");
-    setTimeout(() => playTone(game, 600, 0.1, 0.1, "sawtooth"), 100);
+    // Harsh static continuous zap
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => playSweep(game, 2400 - i * 100, 400, 0.08, 0.15, "square"), i * 60);
+    }
   }
 
   // === MELEE SOUNDS ===
   function playPunchSwingSound(game) {
-    playSweep(game, 220, 380, 0.12, 0.08, "triangle");
+    // Fast, sharp whoosh
+    playSweep(game, 300, 600, 0.1, 0.08, "triangle");
   }
   function playPunchHitSound(game) {
-    playSweep(game, 380, 120, 0.1, 0.18, "square");
-    playTone(game, 90, 0.1, 0.15, "triangle");
+    // Sharp crack combined with thud
+    playSweep(game, 800, 100, 0.1, 0.18, "square");
+    playTone(game, 80, 0.12, 0.2, "triangle");
   }
 
   return {
