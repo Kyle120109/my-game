@@ -4,8 +4,8 @@ import { buildAdvancedMaterialSet, createDynamicDirtMask } from "../gameplay/dyn
 function addSpokes(parent, radius, width, count, material) {
     for (let i = 0; i < count; i += 1) {
         const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, radius * 1.9, 8), material);
-        spoke.rotation.x = (i / count) * Math.PI;
-        spoke.position.x = width;
+        spoke.rotation.z = (i / count) * Math.PI;
+        spoke.position.z = width;
         parent.add(spoke);
     }
 }
@@ -222,23 +222,25 @@ export function setupRacers(textureSet) {
         const dummy = new THREE.Object3D();
         for (let i = 0; i < treadCount; i++) {
             const angle = (i / treadCount) * Math.PI * 2;
+            const rBase = tireRadius + tireThickness;
 
             // Center
-            dummy.position.set(Math.cos(angle) * (tireRadius + tireThickness), Math.sin(angle) * (tireRadius + tireThickness), 0);
-            dummy.lookAt(0, 0, 0);
+            dummy.position.set(Math.cos(angle) * rBase, Math.sin(angle) * rBase, 0);
+            dummy.rotation.set(0, 0, angle - Math.PI / 2);
             dummy.updateMatrix();
             centerTreads.setMatrixAt(i, dummy.matrix);
 
             // Side L
-            dummy.position.set(Math.cos(angle) * (tireRadius + tireThickness * 0.7), Math.sin(angle) * (tireRadius + tireThickness * 0.7), 0.035);
-            dummy.lookAt(0, 0, 0);
+            const rSide = tireRadius + tireThickness * 0.7;
+            dummy.position.set(Math.cos(angle) * rSide, Math.sin(angle) * rSide, 0.035);
+            dummy.rotation.set(0, 0, angle - Math.PI / 2);
             dummy.rotateX(0.5);
             dummy.updateMatrix();
             sideTreadsL.setMatrixAt(i, dummy.matrix);
 
             // Side R
-            dummy.position.set(Math.cos(angle) * (tireRadius + tireThickness * 0.7), Math.sin(angle) * (tireRadius + tireThickness * 0.7), -0.035);
-            dummy.lookAt(0, 0, 0);
+            dummy.position.set(Math.cos(angle) * rSide, Math.sin(angle) * rSide, -0.035);
+            dummy.rotation.set(0, 0, angle - Math.PI / 2);
             dummy.rotateX(-0.5);
             dummy.updateMatrix();
             sideTreadsR.setMatrixAt(i, dummy.matrix);
