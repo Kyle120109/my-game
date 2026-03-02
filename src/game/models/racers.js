@@ -259,6 +259,9 @@ export function setupRacers(textureSet) {
         rearSwingPivot.add(rearWheelMount, rearCaliper);
         const rearWheelSpin = new THREE.Group();
         rearWheelMount.add(rearWheelSpin);
+        const rearWheelVisual = new THREE.Group();
+        rearWheelVisual.rotation.y = Math.PI / 2;
+        rearWheelSpin.add(rearWheelVisual);
 
         const rearTire = new THREE.Mesh(tireGeo, wheelMat);
         const rearRim = new THREE.Mesh(rimGeo, rimMat);
@@ -277,16 +280,18 @@ export function setupRacers(textureSet) {
             cassette.add(cog);
         }
 
-        rearWheelSpin.add(rearTire, centerTreads, sideTreadsL, sideTreadsR, rearRim, rearHub, rearBrake, cassette);
-        addSpokes(rearWheelSpin, tireRadius - 0.03, 0.03, 16, spokeMat);
-        addSpokes(rearWheelSpin, tireRadius - 0.03, -0.03, 16, spokeMat);
-        rearWheelSpin.rotation.y = Math.PI / 2;
+        rearWheelVisual.add(rearTire, centerTreads, sideTreadsL, sideTreadsR, rearRim, rearHub, rearBrake, cassette);
+        addSpokes(rearWheelVisual, tireRadius - 0.03, 0.03, 16, spokeMat);
+        addSpokes(rearWheelVisual, tireRadius - 0.03, -0.03, 16, spokeMat);
 
         const frontWheelMount = new THREE.Group();
         frontWheelMount.position.set(0, -0.9, 0); // Dropouts on fork
         forkPivot.add(frontWheelMount, frontCaliper);
         const frontWheelSpin = new THREE.Group();
         frontWheelMount.add(frontWheelSpin);
+        const frontWheelVisual = new THREE.Group();
+        frontWheelVisual.rotation.y = Math.PI / 2;
+        frontWheelSpin.add(frontWheelVisual);
 
         const frontTire = rearTire.clone();
         const frontCenterTreads = centerTreads.clone();
@@ -297,10 +302,9 @@ export function setupRacers(textureSet) {
         const frontBrake = rearBrake.clone();
         frontBrake.position.z = 0.05; // Flip disc to other side
 
-        frontWheelSpin.add(frontTire, frontCenterTreads, frontSideL, frontSideR, frontRim, frontHub, frontBrake);
-        addSpokes(frontWheelSpin, tireRadius - 0.03, 0.03, 16, spokeMat);
-        addSpokes(frontWheelSpin, tireRadius - 0.03, -0.03, 16, spokeMat);
-        frontWheelSpin.rotation.y = Math.PI / 2;
+        frontWheelVisual.add(frontTire, frontCenterTreads, frontSideL, frontSideR, frontRim, frontHub, frontBrake);
+        addSpokes(frontWheelVisual, tireRadius - 0.03, 0.03, 16, spokeMat);
+        addSpokes(frontWheelVisual, tireRadius - 0.03, -0.03, 16, spokeMat);
 
         // 6. Seating
         const seatPost = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.25, 12), mats.chrome);
