@@ -4,7 +4,20 @@ import { samplePath, surfaceNormal, distanceToTrack } from "../../levels.js";
 import { buildOrthonormalFrame } from "../math.js";
 import { pushBoxObstacle } from "../obstacles.js";
 
+/**
+ * [MODULE] environments/urban8: Thematic world builder for the Urban Interchange.
+ * Places monolithic skyscrapers, sunken highway trenches, elevated flyovers,
+ * and highway signage based on track elevation data.
+ */
+
+/**
+ * Creates the Urban8 environment specific builder.
+ */
 export function createUrbanEnvironmentBuilder({ modelLibrary, tempVec3A, tempVec3B, tempVec3C, tempMat4 }) {
+  /**
+   * Constructs the cityscape scenery. Density is dynamically reduced 
+   * geometrically further away from the track to preserve draw call budgets.
+   */
   function buildUrbanEnvironment(game, level, rng) {
     const roofMat = new THREE.MeshStandardMaterial({ color: 0x1a1c20, roughness: 0.92 });
     const pillarMat = new THREE.MeshStandardMaterial({ color: 0x444b55, roughness: 0.88 });

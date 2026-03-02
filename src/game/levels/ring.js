@@ -1,5 +1,11 @@
 ﻿import * as THREE from "three";
 
+/**
+ * [LEVEL CONFIG] ring
+ * Defines the track spline, heightmap, and prop distributions for the Ring map.
+ * The height function procedurally carves a massive central mountain, inner ridges,
+ * a ring valley, and an outer rim based on radial distance from the origin.
+ */
 export const ringLevel = {
   id: "ring",
   name: "环峰禁区",

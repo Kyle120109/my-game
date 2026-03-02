@@ -7,6 +7,17 @@ import { createCheckpointSystem } from "./checkpoints.js";
 import { createControlSystem } from "./controls.js";
 import { createPhysicsSystem } from "./physics.js";
 
+/**
+ * Core gameplay orchestrator.
+ * Instantiates and wires together physics, controls, combat, and items.
+ * Processes the frame-by-frame simulation for all active racers.
+ */
+
+/**
+ * Creates the gameplay subsystem.
+ * @param {Object} deps - Engine dependencies (UI, FX, rendering updates).
+ * @returns {Object} Exposes update loop methods for the main game wrapper.
+ */
 export function createGameplaySystem({ input, settings, ui, fx, updateRacerVisual, setRaceMessage }) {
   const tempVec3A = new THREE.Vector3();
   const tempVec3B = new THREE.Vector3();
@@ -71,6 +82,13 @@ export function createGameplaySystem({ input, settings, ui, fx, updateRacerVisua
     racer.globalProgress = game.activeLevel.loop ? racer.lap * game.activeLevel.totalLength + racer.progress : racer.progress;
   }
 
+  /**
+   * Main simulation tick for all racers.
+   * Handles state timers, input polling, combat/item execution, and physics integration.
+   * @param {Object} game - Game state.
+   * @param {number} dt - Delta time for the frame.
+   * @param {boolean} isMenu - Whether running in the background of the menu.
+   */
   function updateRacers(game, dt, isMenu) {
     for (const racer of game.racers) {
       if (racer.punchCooldown > 0) racer.punchCooldown -= dt;

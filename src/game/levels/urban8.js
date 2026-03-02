@@ -1,5 +1,11 @@
 import * as THREE from "three";
 
+/**
+ * [LEVEL CONFIG] urban8
+ * Defines the track spline, heightmap, and prop distributions for the Urban map.
+ * The height function maps orthogonal sectors (elevated highway vs sunken tunnel)
+ * using exponential blends (`Math.exp`) to act as smoothstep transitions.
+ */
 export const urban8Level = {
   id: "urban8",
   name: "城市双环立交",

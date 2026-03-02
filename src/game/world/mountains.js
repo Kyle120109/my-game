@@ -1,180 +1,192 @@
 ﻿import * as THREE from "three";
 import { WORLD_UP } from "../config.js";
 import { createRng, distanceToTrack, surfaceNormal } from "../levels.js";
+
+/**
+ * [MODULE] world/mountains: Procedural mountain and terrain feature generation.
+ * Scatters massive, multi-part procedural rock formations across the skyline 
+ * while ensuring they do not intersect the drivable track.
+ */
+
+/**
+ * Distributes mountain meshes across the far edges of the terrain map.
+ * @param {Object} game - Global game state.
+ * @param {Object} level - Level configuration and bounds.
+ */
 export function buildMountainField(game, level) {
-    const field = level.mountainField;
-    if (!field?.belts?.length) return;
+  const field = level.mountainField;
+  if (!field?.belts?.length) return;
 
-    const rng = createRng(level.seed ^ (field.seedOffset ?? 0x51f2));
-    const minX = level.bounds.minX + (field.boundsInset ?? 12);
-    const maxX = level.bounds.maxX - (field.boundsInset ?? 12);
-    const minZ = level.bounds.minZ + (field.boundsInset ?? 12);
-    const maxZ = level.bounds.maxZ - (field.boundsInset ?? 12);
-    const centerX = (level.bounds.minX + level.bounds.maxX) * 0.5;
-    const centerZ = (level.bounds.minZ + level.bounds.maxZ) * 0.5;
-    const placements = [];
-    const warm = level.id === "serpent";
+  const rng = createRng(level.seed ^ (field.seedOffset ?? 0x51f2));
+  const minX = level.bounds.minX + (field.boundsInset ?? 12);
+  const maxX = level.bounds.maxX - (field.boundsInset ?? 12);
+  const minZ = level.bounds.minZ + (field.boundsInset ?? 12);
+  const maxZ = level.bounds.maxZ - (field.boundsInset ?? 12);
+  const centerX = (level.bounds.minX + level.bounds.maxX) * 0.5;
+  const centerZ = (level.bounds.minZ + level.bounds.maxZ) * 0.5;
+  const placements = [];
+  const warm = level.id === "serpent";
 
-    for (const belt of field.belts) {
-      const count = belt.count ?? 0;
-      for (let i = 0; i < count; i += 1) {
-        const attempts = belt.maxAttempts ?? field.maxAttempts ?? 28;
-        for (let attempt = 0; attempt < attempts; attempt += 1) {
-          const point = sampleMountainPoint(level, belt, rng, centerX, centerZ, minX, maxX, minZ, maxZ);
-          if (!point) continue;
-          const x = point.x;
-          const z = point.z;
-          if (x < minX || x > maxX || z < minZ || z > maxZ) continue;
+  for (const belt of field.belts) {
+    const count = belt.count ?? 0;
+    for (let i = 0; i < count; i += 1) {
+      const attempts = belt.maxAttempts ?? field.maxAttempts ?? 28;
+      for (let attempt = 0; attempt < attempts; attempt += 1) {
+        const point = sampleMountainPoint(level, belt, rng, centerX, centerZ, minX, maxX, minZ, maxZ);
+        if (!point) continue;
+        const x = point.x;
+        const z = point.z;
+        if (x < minX || x > maxX || z < minZ || z > maxZ) continue;
 
-          const minScale = belt.minScale ?? field.minScale ?? 8;
-          const maxScale = belt.maxScale ?? field.maxScale ?? 18;
-          const scalePow = belt.scaleBias ?? 1.15;
-          const scale = THREE.MathUtils.lerp(minScale, maxScale, Math.pow(rng(), scalePow));
-          const footprintScale = belt.footprintScale ?? field.footprintScale ?? 1.62;
-          const footprint = scale * footprintScale;
-          const minTrackDist = belt.minTrackDist ?? field.defaultMinTrackDist ?? (level.routeHalfWidth + 12);
-          const viewClearance = scale * (belt.viewClearanceScale ?? field.viewClearanceScale ?? 0.72);
-          const sightlineClearance = scale * (belt.sightlineScale ?? field.sightlineScale ?? 0.5);
-          if (distanceToTrack(level, x, z) < minTrackDist + footprint + viewClearance + sightlineClearance) continue;
-          const sampleRadius = footprint * (belt.reliefSampleScale ?? field.reliefSampleScale ?? 0.66);
-          const minNormalY = belt.minNormalY ?? field.minNormalY ?? 0.56;
-          const maxRelief = belt.maxRelief ?? field.maxRelief ?? scale * 0.95;
-          if (!isMountainPlacementStable(level, x, z, sampleRadius, minNormalY, maxRelief)) continue;
+        const minScale = belt.minScale ?? field.minScale ?? 8;
+        const maxScale = belt.maxScale ?? field.maxScale ?? 18;
+        const scalePow = belt.scaleBias ?? 1.15;
+        const scale = THREE.MathUtils.lerp(minScale, maxScale, Math.pow(rng(), scalePow));
+        const footprintScale = belt.footprintScale ?? field.footprintScale ?? 1.62;
+        const footprint = scale * footprintScale;
+        const minTrackDist = belt.minTrackDist ?? field.defaultMinTrackDist ?? (level.routeHalfWidth + 12);
+        const viewClearance = scale * (belt.viewClearanceScale ?? field.viewClearanceScale ?? 0.72);
+        const sightlineClearance = scale * (belt.sightlineScale ?? field.sightlineScale ?? 0.5);
+        if (distanceToTrack(level, x, z) < minTrackDist + footprint + viewClearance + sightlineClearance) continue;
+        const sampleRadius = footprint * (belt.reliefSampleScale ?? field.reliefSampleScale ?? 0.66);
+        const minNormalY = belt.minNormalY ?? field.minNormalY ?? 0.56;
+        const maxRelief = belt.maxRelief ?? field.maxRelief ?? scale * 0.95;
+        if (!isMountainPlacementStable(level, x, z, sampleRadius, minNormalY, maxRelief)) continue;
 
-          let overlaps = false;
-          const spacingScale = belt.minSpacingScale ?? field.minSpacingScale ?? 1.1;
-          for (const placed of placements) {
-            const dx = x - placed.x;
-            const dz = z - placed.z;
-            const distSq = dx * dx + dz * dz;
-            const keep = (footprint + placed.radius) * spacingScale;
-            if (distSq < keep * keep) {
-              overlaps = true;
-              break;
-            }
+        let overlaps = false;
+        const spacingScale = belt.minSpacingScale ?? field.minSpacingScale ?? 1.1;
+        for (const placed of placements) {
+          const dx = x - placed.x;
+          const dz = z - placed.z;
+          const distSq = dx * dx + dz * dz;
+          const keep = (footprint + placed.radius) * spacingScale;
+          if (distSq < keep * keep) {
+            overlaps = true;
+            break;
           }
-          if (overlaps) continue;
-
-          const mountain = createMountainMass(scale, rng, warm);
-          const baseY = level.heightFn(x, z);
-          mountain.group.position.set(x, baseY - scale * 0.11, z);
-          mountain.group.rotation.y = rng() * Math.PI * 2;
-          game.decorRoot.add(mountain.group);
-          pushMountainColliders(game, mountain, mountain.group.position, mountain.group.rotation.y);
-          placements.push({ x, z, radius: mountain.footprintRadius ?? footprint * 0.92 });
-          break;
         }
+        if (overlaps) continue;
+
+        const mountain = createMountainMass(scale, rng, warm);
+        const baseY = level.heightFn(x, z);
+        mountain.group.position.set(x, baseY - scale * 0.11, z);
+        mountain.group.rotation.y = rng() * Math.PI * 2;
+        game.decorRoot.add(mountain.group);
+        pushMountainColliders(game, mountain, mountain.group.position, mountain.group.rotation.y);
+        placements.push({ x, z, radius: mountain.footprintRadius ?? footprint * 0.92 });
+        break;
       }
     }
   }
-  function sampleMountainPoint(level, belt, rng, centerX, centerZ, minX, maxX, minZ, maxZ) {
-    if (belt.mode === "ring") {
-      const angle = rng() * Math.PI * 2;
-      const radius = (belt.radius ?? 120) + (rng() - 0.5) * (belt.spread ?? 20);
-      return { x: centerX + Math.cos(angle) * radius, z: centerZ + Math.sin(angle) * radius };
-    }
+}
+function sampleMountainPoint(level, belt, rng, centerX, centerZ, minX, maxX, minZ, maxZ) {
+  if (belt.mode === "ring") {
+    const angle = rng() * Math.PI * 2;
+    const radius = (belt.radius ?? 120) + (rng() - 0.5) * (belt.spread ?? 20);
+    return { x: centerX + Math.cos(angle) * radius, z: centerZ + Math.sin(angle) * radius };
+  }
 
-    if (belt.mode === "line") {
-      const z = THREE.MathUtils.lerp(belt.zMin ?? minZ, belt.zMax ?? maxZ, rng()) + (rng() - 0.5) * (belt.jitterZ ?? 0);
-      const x = (belt.x ?? centerX) + (rng() - 0.5) * (belt.jitterX ?? 0);
-      return { x, z };
-    }
+  if (belt.mode === "line") {
+    const z = THREE.MathUtils.lerp(belt.zMin ?? minZ, belt.zMax ?? maxZ, rng()) + (rng() - 0.5) * (belt.jitterZ ?? 0);
+    const x = (belt.x ?? centerX) + (rng() - 0.5) * (belt.jitterX ?? 0);
+    return { x, z };
+  }
 
-    if (belt.mode === "edge") {
-      const inset = belt.inset ?? 0;
-      const band = belt.band ?? 68;
-      const side = Math.floor(rng() * 4);
-      if (side === 0) {
-        return {
-          x: THREE.MathUtils.lerp(minX + inset, Math.min(maxX, minX + inset + band), rng()),
-          z: THREE.MathUtils.lerp(minZ, maxZ, rng()),
-        };
-      }
-      if (side === 1) {
-        return {
-          x: THREE.MathUtils.lerp(Math.max(minX, maxX - inset - band), maxX - inset, rng()),
-          z: THREE.MathUtils.lerp(minZ, maxZ, rng()),
-        };
-      }
-      if (side === 2) {
-        return {
-          x: THREE.MathUtils.lerp(minX, maxX, rng()),
-          z: THREE.MathUtils.lerp(minZ + inset, Math.min(maxZ, minZ + inset + band), rng()),
-        };
-      }
+  if (belt.mode === "edge") {
+    const inset = belt.inset ?? 0;
+    const band = belt.band ?? 68;
+    const side = Math.floor(rng() * 4);
+    if (side === 0) {
       return {
-        x: THREE.MathUtils.lerp(minX, maxX, rng()),
-        z: THREE.MathUtils.lerp(Math.max(minZ, maxZ - inset - band), maxZ - inset, rng()),
+        x: THREE.MathUtils.lerp(minX + inset, Math.min(maxX, minX + inset + band), rng()),
+        z: THREE.MathUtils.lerp(minZ, maxZ, rng()),
       };
     }
-
+    if (side === 1) {
+      return {
+        x: THREE.MathUtils.lerp(Math.max(minX, maxX - inset - band), maxX - inset, rng()),
+        z: THREE.MathUtils.lerp(minZ, maxZ, rng()),
+      };
+    }
+    if (side === 2) {
+      return {
+        x: THREE.MathUtils.lerp(minX, maxX, rng()),
+        z: THREE.MathUtils.lerp(minZ + inset, Math.min(maxZ, minZ + inset + band), rng()),
+      };
+    }
     return {
       x: THREE.MathUtils.lerp(minX, maxX, rng()),
-      z: THREE.MathUtils.lerp(minZ, maxZ, rng()),
+      z: THREE.MathUtils.lerp(Math.max(minZ, maxZ - inset - band), maxZ - inset, rng()),
     };
   }
-  function isMountainPlacementStable(level, x, z, sampleRadius, minNormalY, maxRelief) {
-    const centerNormal = surfaceNormal(level, x, z);
-    if (centerNormal.y < minNormalY) return false;
 
-    let minH = level.heightFn(x, z);
-    let maxH = minH;
-    const sampleCount = 8;
-    for (let i = 0; i < sampleCount; i += 1) {
-      const angle = (i / sampleCount) * Math.PI * 2;
-      const px = x + Math.cos(angle) * sampleRadius;
-      const pz = z + Math.sin(angle) * sampleRadius;
-      const h = level.heightFn(px, pz);
-      if (h < minH) minH = h;
-      if (h > maxH) maxH = h;
-      if (surfaceNormal(level, px, pz).y < minNormalY * 0.88) return false;
-    }
-    return maxH - minH <= maxRelief;
+  return {
+    x: THREE.MathUtils.lerp(minX, maxX, rng()),
+    z: THREE.MathUtils.lerp(minZ, maxZ, rng()),
+  };
+}
+function isMountainPlacementStable(level, x, z, sampleRadius, minNormalY, maxRelief) {
+  const centerNormal = surfaceNormal(level, x, z);
+  if (centerNormal.y < minNormalY) return false;
+
+  let minH = level.heightFn(x, z);
+  let maxH = minH;
+  const sampleCount = 8;
+  for (let i = 0; i < sampleCount; i += 1) {
+    const angle = (i / sampleCount) * Math.PI * 2;
+    const px = x + Math.cos(angle) * sampleRadius;
+    const pz = z + Math.sin(angle) * sampleRadius;
+    const h = level.heightFn(px, pz);
+    if (h < minH) minH = h;
+    if (h > maxH) maxH = h;
+    if (surfaceNormal(level, px, pz).y < minNormalY * 0.88) return false;
   }
-  function pushMountainColliders(game, mountain, basePosition, rotationY) {
-    // [MARKER] Mountain collider authoring: 调整碰撞体积只改这里。
-    const offset = new THREE.Vector3();
-    const right = new THREE.Vector3();
-    const forward = new THREE.Vector3();
-    for (const collider of mountain.colliders) {
-      offset.copy(collider.offset);
-      offset.applyAxisAngle(WORLD_UP, rotationY);
-      const baseX = basePosition.x + offset.x;
-      const baseY = basePosition.y + offset.y;
-      const baseZ = basePosition.z + offset.z;
+  return maxH - minH <= maxRelief;
+}
+function pushMountainColliders(game, mountain, basePosition, rotationY) {
+  // [MARKER] Mountain collider authoring: 调整碰撞体积只改这里。
+  const offset = new THREE.Vector3();
+  const right = new THREE.Vector3();
+  const forward = new THREE.Vector3();
+  for (const collider of mountain.colliders) {
+    offset.copy(collider.offset);
+    offset.applyAxisAngle(WORLD_UP, rotationY);
+    const baseX = basePosition.x + offset.x;
+    const baseY = basePosition.y + offset.y;
+    const baseZ = basePosition.z + offset.z;
 
-      if (collider.shape === "box") {
-        const yaw = rotationY + (collider.localYaw ?? 0);
-        right.set(1, 0, 0).applyAxisAngle(WORLD_UP, yaw);
-        forward.set(0, 0, 1).applyAxisAngle(WORLD_UP, yaw);
-        game.obstacles.push({
-          shape: "box",
-          x: baseX,
-          y: baseY,
-          z: baseZ,
-          right: right.clone(),
-          forward: forward.clone(),
-          halfWidth: collider.halfWidth,
-          halfLength: collider.halfLength,
-          halfHeight: collider.halfHeight,
-          crashWeight: collider.crashWeight ?? 1.72,
-          type: "mountain",
-        });
-        continue;
-      }
-
+    if (collider.shape === "box") {
+      const yaw = rotationY + (collider.localYaw ?? 0);
+      right.set(1, 0, 0).applyAxisAngle(WORLD_UP, yaw);
+      forward.set(0, 0, 1).applyAxisAngle(WORLD_UP, yaw);
       game.obstacles.push({
-        shape: "sphere",
+        shape: "box",
         x: baseX,
         y: baseY,
         z: baseZ,
-        radius: collider.radius,
-        height: collider.height,
+        right: right.clone(),
+        forward: forward.clone(),
+        halfWidth: collider.halfWidth,
+        halfLength: collider.halfLength,
+        halfHeight: collider.halfHeight,
         crashWeight: collider.crashWeight ?? 1.72,
         type: "mountain",
       });
+      continue;
     }
+
+    game.obstacles.push({
+      shape: "sphere",
+      x: baseX,
+      y: baseY,
+      z: baseZ,
+      radius: collider.radius,
+      height: collider.height,
+      crashWeight: collider.crashWeight ?? 1.72,
+      type: "mountain",
+    });
   }
+}
 function createMountainMass(scale, rng, warm) {
   const group = new THREE.Group();
   const baseColor = warm ? new THREE.Color(0x8f6c4b) : new THREE.Color(0x687064);
@@ -252,6 +264,12 @@ function createMountainMass(scale, rng, warm) {
     colliders: buildMountainColliderVolume(baseRadius, height, flanks, { radius: talusRadius, height: talusHeight }),
   };
 }
+
+/**
+ * Generates the displaced geometry for a mountain's main body or shoulder.
+ * Uses an Icosahedron base to avoid the "pinched pole" artifacts of cylinders/spheres,
+ * then displaces vertices using combined sine waves for ridges, grain, and buttresses.
+ */
 function createMountainShellGeometry(baseRadius, height, rng, detailScale = 1) {
   // 统一三角网避免圆柱顶盖造成的“扇形片状山”。
   const detail = THREE.MathUtils.clamp(Math.round(3 + detailScale + rng() * 0.9), 3, 5);

@@ -1,5 +1,10 @@
 import * as THREE from "three";
 
+/**
+ * [LEVEL CONFIG] lava
+ * Defines the track spline, heightmap, and prop distributions for the Lava map.
+ * The height function creates extreme sharp peaks, volcanic cones, and a massive caldera drop.
+ */
 export const lavaLevel = {
     id: "lava",
     name: "熔岩峡谷 (Lava Canyon)",

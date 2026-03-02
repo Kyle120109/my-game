@@ -26,7 +26,10 @@ export const SETTINGS = {
   blur: false,
 };
 
-// 统一手感参数，便于后续只改这一处做速度/操控微调。
+/**
+ * Unified physics parameters for tuning handling, items, and environments.
+ * Organized into sections for easier tuning of specific gameplay aspects.
+ */
 export const PHYSICS = {
   playerDriveForce: 60,
   aiDriveForce: 60,
@@ -113,6 +116,11 @@ export const AI_PROFILES = [
 
 export const ITEM_TYPES = ["turbo", "bash", "shock", "shield", "trap", "banana", "bomb"];
 
+/**
+ * Returns the localized Chinese name for a given item type.
+ * @param {string} type - The internal string identifier for the item (e.g., 'turbo', 'banana').
+ * @returns {string} The localized display name.
+ */
 export function itemName(type) {
   if (type === "turbo") return "涡轮";
   if (type === "bash") return "冲撞";
@@ -124,6 +132,11 @@ export function itemName(type) {
   return "未知";
 }
 
+/**
+ * Formats a given time in seconds into a standard race timer string format (MM:SS.ms).
+ * @param {number} time - Race time elapsed in seconds.
+ * @returns {string} Formatted string like "02:15.42".
+ */
 export function formatRaceTime(time) {
   const clamped = Math.max(0, time);
   const minutes = Math.floor(clamped / 60);
@@ -132,6 +145,10 @@ export function formatRaceTime(time) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(cent).padStart(2, "0")}`;
 }
 
+/**
+ * Initializes the default data structure for the global audio state.
+ * @returns {Object} An empty/initial audio state object configured for Web Audio processing.
+ */
 export function createAudioState() {
   return {
     ctx: null,

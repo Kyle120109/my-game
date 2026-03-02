@@ -1,8 +1,17 @@
 ﻿import * as THREE from "three";
 import { surfaceNormal, samplePath, forwardFromHeading, horizontalSpeed, damp } from "./levels.js";
 
-// [MODULE] camera: 玩家相机 + 菜单巡航相机。
+/**
+ * Camera System managing both gameplay chase-cam and menu orbit-cam.
+ * Employs damped interpolation for smooth tracking without jitter.
+ */
 
+/**
+ * Initializes the camera system constraints and logic.
+ * @param {Object} deps - Dependencies.
+ * @param {Object} deps.settings - Global settings (fov, shake).
+ * @returns {Object} Methods to update player or menu camera (updatePlayerCamera, updateMenuCamera).
+ */
 export function createCameraSystem({ settings }) {
   const tempVec3A = new THREE.Vector3();
   const tempVec3B = new THREE.Vector3();
@@ -19,6 +28,12 @@ export function createCameraSystem({ settings }) {
 
   const tempPlayerPos = new THREE.Vector3();
 
+  /**
+   * Updates the chase camera to fluidly follow the player.
+   * Blends between heading direction and actual velocity vector to handle drifting/skidding.
+   * @param {Object} game - Global game state.
+   * @param {number} dt - Time delta.
+   */
   function updatePlayerCamera(game, dt) {
     if (!game.player || !game.player.riderRoot) return;
 
@@ -81,6 +96,12 @@ export function createCameraSystem({ settings }) {
     game.camera.updateProjectionMatrix();
   }
 
+  /**
+   * Updates the cinematic orbiting camera used in the main menu.
+   * Focuses on a point moving along the track path over time.
+   * @param {Object} game - Global game state.
+   * @param {number} dt - Time delta.
+   */
   function updateMenuCamera(game, dt) {
     game.menuOrbit += dt * 0.2;
     const focus = samplePath(game.activeLevel, game.simTime * 22).point;

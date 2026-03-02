@@ -11,6 +11,17 @@ import { createEnvironmentBuilder } from "./environment.js";
 import { createHarborEnvironmentBuilder } from "./environments/harbor.js";
 import { createUrbanEnvironmentBuilder } from "./environments/urban8.js";
 
+/**
+ * [MODULE] world/system: Facade for procedurally generating 3D maps.
+ * Instantiates the scene graph layout and delegates construction to 
+ * specialized environment builders for terrain, routes, and scenery.
+ */
+
+/**
+ * Creates the World Generation subsystem.
+ * @param {Object} deps - Dependencies (settings, levels, model library).
+ * @returns {Object} Methods to set up and tear down tracks.
+ */
 export function createWorldSystem({ settings, levels, modelLibrary }) {
   const tempVec3A = new THREE.Vector3();
   const tempVec3B = new THREE.Vector3();
@@ -26,6 +37,12 @@ export function createWorldSystem({ settings, levels, modelLibrary }) {
   const { buildUrbanEnvironment } = createUrbanEnvironmentBuilder({ modelLibrary, tempVec3A, tempVec3B, tempVec3C, tempMat4 });
   const { buildEnvironment } = createEnvironmentBuilder({ modelLibrary, tempVec3A, buildHarborEnvironment, buildUrbanEnvironment });
 
+  /**
+   * Initializes a level by tearing down the old scene graph and 
+   * building a completely new procedural world hierarchy.
+   * @param {Object} game - The global game state.
+   * @param {string} levelId - Identifier of the level to generate.
+   */
   function setupWorld(game, levelId) {
     const level = levels.find((entry) => entry.id === levelId) ?? levels[0];
     game.activeLevel = level;
@@ -73,6 +90,11 @@ export function createWorldSystem({ settings, levels, modelLibrary }) {
     if (level.id === "debug") buildAssetGallery(game);
   }
 
+  /**
+   * Debug feature: Spawns a sequential catalog of every procedural 
+   * mesh available in the model library on a massive flat plane.
+   * Excellent for visual inspection of generation algorithms.
+   */
   function buildAssetGallery(game) {
     let zOffset = 20;
     const spawnX = 15;

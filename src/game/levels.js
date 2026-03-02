@@ -10,7 +10,11 @@ import { neonLevel } from "./levels/neon.js";
 import { ruinsLevel } from "./levels/ruins.js";
 import { debugFlatLevel } from "./levels/debug_flat.js";
 
-// [MODULE] levels: 关卡装配 + 路径/进度数学。
+/**
+ * [MODULE] levels: Global registry and mathematical core for track navigation.
+ * Manifest of all available levels and core track mathematics.
+ * Handles continuous track projection and clamped loop unwrapping.
+ */
 
 const tempVec2A = new THREE.Vector2();
 const tempVec2B = new THREE.Vector2();
@@ -25,6 +29,10 @@ export const LEVELS = [
 // LEVELS_ALL includes the hidden debug map used by the world system.
 export const LEVELS_ALL = [...LEVELS, debugFlatLevel];
 
+/**
+ * Pre-computes the cumulative segment lengths to optimize track distance lookups.
+ * @param {Object} level - Level definition object.
+ */
 export function prepareLevel(level) {
   level.pathPoints = level.path.map(([x, z]) => new THREE.Vector3(x, level.heightFn(x, z) + BIKE_CLEARANCE, z));
   const segmentCount = level.loop ? level.pathPoints.length : level.pathPoints.length - 1;
@@ -42,6 +50,13 @@ export function prepareLevel(level) {
   level.totalLength = total;
 }
 
+/**
+ * Samples exactly where a given distance falls on the track spline.
+ * Interpolates between precomputed nodes to return a precise 3D point and forward vector.
+ * @param {Object} level - Level definition object.
+ * @param {number} value - Distance along the spline in meters.
+ * @returns {Object} Sampled point, forward vector, clamped percentage t.
+ */
 export function samplePath(level, value) {
   let s = value;
   if (level.loop) {
@@ -74,6 +89,14 @@ export function samplePath(level, value) {
   return { s, point, forward, segmentIndex, t };
 }
 
+/**
+ * Projects an arbitrary 3D world coordinate onto the closest point on the track layout.
+ * O(N) exhaustive check across all track segments.
+ * @param {Object} level - Level definition.
+ * @param {number} x - World X.
+ * @param {number} z - World Z.
+ * @returns {Object} Contains best continuous progress S (distance) and squared distance to track.
+ */
 export function projectProgress(level, x, z) {
   let bestDistSq = Number.POSITIVE_INFINITY;
   let bestS = 0;
@@ -183,6 +206,10 @@ export function forwardProgressDistance(level, fromS, toS) {
   return dist;
 }
 
+/**
+ * Approximates a smooth surface normal given a world X/Z coordinate and the level's height map.
+ * Takes 4 surrounding samples using a central difference derivative.
+ */
 export function surfaceNormal(level, x, z) {
   const eps = 0.9;
   const hL = level.heightFn(x - eps, z);

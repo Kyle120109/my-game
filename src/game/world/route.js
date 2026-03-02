@@ -2,7 +2,22 @@
 import { createRng, samplePath, surfaceNormal, distanceToTrack } from "../levels.js";
 import { buildOrthonormalFrame } from "./math.js";
 import { pushBoxObstacle } from "./obstacles.js";
+
+/**
+ * [MODULE] world/route: Procedural track geometry generation.
+ * Extrudes the mathematical spline path into a continuous 3D ribbon mesh
+ * and automatically places shoulders, lane markers, and safety guardrails.
+ */
+
+/**
+ * Creates the route geometry builder.
+ * @returns {Object} Method to extrude the track surface.
+ */
 export function createRouteBuilder({ settings, modelLibrary, tempVec3A, tempVec3B, tempVec3C, tempVec3D, tempMat4 }) {
+  /**
+   * Samples the level's spline at a configured resolution and sweeps 
+   * profiles along it to construct the drivable track surface meshes.
+   */
   function buildRoute(game, level) {
     const rng = createRng(level.seed ^ 0xabcd);
     const isUrbanInterchange = level.id === "urban8";

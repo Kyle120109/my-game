@@ -1,5 +1,10 @@
 import * as THREE from "three";
 
+/**
+ * [LEVEL CONFIG] neon
+ * Defines the track spline, heightmap, and prop distributions for the Neon map.
+ * The height function uses Sine/Cosine interference to generate an undulating digital wave grid.
+ */
 export const neonLevel = {
     id: "neon",
     name: "霓虹电网 (Neon Grid)",

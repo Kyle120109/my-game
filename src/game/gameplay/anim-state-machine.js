@@ -1,9 +1,11 @@
 import * as THREE from "three";
 import { damp } from "../levels.js";
 
-// [MODULE] anim-state-machine: Advanced layered animation system for Riders and Bikes.
-// This is currently designed to drive the procedural THREE.Group rigs but is structured
-// so that it can easily map outputs to a THREE.AnimationMixer or IK solver later.
+/**
+ * Advanced layered animation system for Riders and Bikes.
+ * Maps high-level gameplay states (speed, steering, braking) into continuous
+ * blend tree weights to procedurally animate the THREE.Group rig.
+ */
 
 export const ANIM_STATES = {
     IDLE_BALANCE: "idle_balance",
@@ -17,7 +19,14 @@ export const ANIM_STATES = {
     RECOVER: "recover",
 };
 
+/**
+ * Handles state transitions and continuous pose blending based on physics and input.
+ */
 export class AnimationStateMachine {
+    /**
+     * Initializes the state machine for a specific racer.
+     * @param {Object} racer - The racer entity.
+     */
     constructor(racer) {
         this.racer = racer;
         this.currentState = ANIM_STATES.IDLE_BALANCE;
@@ -55,6 +64,17 @@ export class AnimationStateMachine {
         };
     }
 
+    /**
+     * Ticks the animation state machine, updating transition weights and calculating the final pose.
+     * @param {number} dt - Delta time.
+     * @param {number} speed - Current scalar speed of the bike.
+     * @param {boolean} isGrounded - Whether the bike is touching the track.
+     * @param {number} steer - Current steering input (-1 to 1).
+     * @param {number} throttle - Throttle input.
+     * @param {number} brake - Braking input.
+     * @param {boolean} isDown - If the rider is in a hard knockdown state.
+     * @param {boolean} recovering - If the rider is getting back up.
+     */
     update(dt, speed, isGrounded, steer, throttle, brake, isDown, recovering) {
         this.stateTime += dt;
         this._determineState(speed, isGrounded, steer, throttle, brake, isDown, recovering);

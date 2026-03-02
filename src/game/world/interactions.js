@@ -2,6 +2,17 @@
 import { ITEM_TYPES, PHYSICS } from "../config.js";
 import { samplePath, surfaceNormal, distanceToTrack } from "../levels.js";
 import { buildOrthonormalFrame } from "./math.js";
+
+/**
+ * [MODULE] interactions: Placement logic for Ramps, Boost Pads, and Item Waves.
+ * Handles procedural distribution of item crates and performs ground-penetration 
+ * diagnostics to ensure ramps merge smoothly with the terrain mesh.
+ */
+
+/**
+ * Creates the interactive feature builder.
+ * @returns {Object} Method to distribute and anchor gameplay interactions.
+ */
 export function createInteractionBuilder({ modelLibrary, tempVec3A, tempVec3B, tempVec3C, tempMat4 }) {
   function getLevelPhysicsValue(baseValue, byLevel, levelId) {
     if (Number.isFinite(byLevel?.[levelId])) return byLevel[levelId];
@@ -56,27 +67,47 @@ export function createInteractionBuilder({ modelLibrary, tempVec3A, tempVec3B, t
     }
     return generated;
   }
+  /**
+   * Performs an array of raycast-like heightmap samples over the footprint of a ramp
+   * to determine if the ramp's edges are floating above the ground or buried underneath it.
+   * This is necessary because the terrain is bumpy; if a ramp spawns on a hill, it must 
+   * be pushed up so players don't hit an invisible wall of dirt before the ramp lip.
+   */
   function inspectRampGroundContact(level, center, right, up, forward, width, length, slopeDeg, halfHeight = 0.46) {
     const slopeRad = THREE.MathUtils.degToRad(slopeDeg);
     const cos = Math.cos(slopeRad);
     const sin = Math.sin(slopeRad);
+
+    // Grid of local 2D offsets to sample across the ramp's surface
     const lateralSamples = [-0.46, 0, 0.46];
     const longitudinalSamples = [-0.58, -0.28, 0, 0.28, 0.58];
+
     let minClearance = Number.POSITIVE_INFINITY;
     let maxPenetration = 0;
 
     for (const lateral of lateralSamples) {
       for (const longitudinal of longitudinalSamples) {
+        // 1. Calculate local footprint offsets scale
         const localX = width * 0.5 * lateral;
         const localZ = length * 0.5 * longitudinal;
+
+        // 2. Rotate to account for the ramp's pitch/slope
         const rotatedY = -halfHeight * cos + localZ * sin;
         const rotatedZ = halfHeight * sin + localZ * cos;
+
+        // 3. Map back to global coordinates using the orthonormal track frame
         const sampleX = center.x + right.x * localX + up.x * rotatedY + forward.x * rotatedZ;
         const sampleY = center.y + right.y * localX + up.y * rotatedY + forward.y * rotatedZ;
         const sampleZ = center.z + right.z * localX + up.z * rotatedY + forward.z * rotatedZ;
+
+        // 4. Sample the absolute terrain altitude at this XY
         const terrainY = level.heightFn(sampleX, sampleZ);
+
+        // Penetration: How deep the terrain is clipping through the ramp (needs to be pushed UP)
         const penetration = terrainY - sampleY;
         if (penetration > maxPenetration) maxPenetration = penetration;
+
+        // Clearance: How high the ramp is floating above the terrain
         const clearance = sampleY - terrainY;
         if (clearance < minClearance) minClearance = clearance;
       }

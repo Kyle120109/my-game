@@ -11,7 +11,10 @@ import { createFxAudioSystem } from "./fx-audio.js";
 import { createMapInspector } from "./map-inspector.js";
 import { createModelLibrary } from "./model-library.js";
 
-// [MODULE] core: 启动 + 主循环 + 状态机。
+/**
+ * Core game module handling application orchestration, global state,
+ * input binding, and the primary game loop (using fixed timestep).
+ */
 
 function createGameState() {
   return {
@@ -80,6 +83,12 @@ function createGameState() {
   };
 }
 
+/**
+ * Main game initialization function.
+ * Orchestrates the creation of all game modules (World, Physics, Rendering, UI)
+ * and starts the primary RequestAnimationFrame loop.
+ * @returns {Object} Reference to the generated game state and active modules.
+ */
 export function bootstrapGame() {
   const game = createGameState();
   const input = createInputState();
@@ -224,7 +233,7 @@ export function bootstrapGame() {
     uiSystem.setResultVisible(false);
     uiSystem.setMenuVisible(true);
     uiSystem.triggerMenuTitleBlast(levelId);
-    // let the browser paint once before heavy sync work
+    // Yield to let browser paint DOM changes (e.g., loading screens) before heavy synchronous setup
     await new Promise((r) => requestAnimationFrame(r));
     if (token !== transitionToken) {
       uiSystem.setUiLoading(false);
@@ -258,7 +267,7 @@ export function bootstrapGame() {
     uiSystem.setRaceMessage(game, "加载中...");
     uiSystem.setResultVisible(false);
     uiSystem.setMenuVisible(false);
-    // yield a frame so UI can update before heavy setup
+    // Yield to allow UI loading screen to render before heavy memory allocation/world setup
     await new Promise((r) => requestAnimationFrame(r));
     if (token !== transitionToken) {
       uiSystem.setUiLoading(false);
@@ -453,8 +462,12 @@ F4  退出调试
 
   function animate() {
     requestAnimationFrame(animate);
+    // Clamp max dt to prevent spiral of death on severe lag spikes
     const frameDt = Math.min(game.clock.getDelta(), 0.05);
     game.accumulator += frameDt;
+
+    // Fixed Timestep approach (accumulator) guarantees determinism for physics 
+    // by stepping logic at exactly `FIXED_DT` intervals, regardless of varied visual framerates.
     while (game.accumulator >= FIXED_DT) {
       step(FIXED_DT);
       game.accumulator -= FIXED_DT;

@@ -2,8 +2,17 @@
 import { STATE } from "./config.js";
 import { distanceToTrack, samplePath, surfaceNormal } from "./levels.js";
 
-// [MODULE] map-inspector: 自由视角检图 + 自动巡检。
+/**
+ * Free-roaming inspector camera and full-level integrity checking system.
+ * Used for debugging geometry occlusion, scaling artifacts, and intrusive obstacles.
+ */
 
+/**
+ * Constructs the inspector tool and binds hotkeys (F2/F3/Right-Click).
+ * Provides APIs to run full map sweeps and automated occlusion audits.
+ * @param {Object} deps - Dependencies.
+ * @returns {Object} Inspection control panel APIs.
+ */
 export function createMapInspector({ game, levels, world, uiSystem, onExitToMenu }) {
   const move = {
     forward: false,

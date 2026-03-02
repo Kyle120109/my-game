@@ -1,7 +1,11 @@
 import * as THREE from "three";
 import { STATE, itemName, formatRaceTime } from "./config.js";
 
-// [MODULE] ui: 菜单/HUD/暂停/结算。
+/**
+ * User Interface orchestrator for the game covering menus, HUD, leaderboards,
+ * lobby logic, and settings management. Coordinates DOM manipulations tightly
+ * with the 3D game state.
+ */
 
 const SETTINGS_STORAGE_KEY = "bike_mountain_rush_settings_v1";
 const QUALITY_VALUES = new Set(["low", "medium", "high"]);
@@ -67,6 +71,10 @@ function saveStoredSettings(settings) {
   }
 }
 
+/**
+ * Scans the DOM and caches references to all required UI elements.
+ * @returns {Record<string, HTMLElement|null>} Dictionary of DOM elements.
+ */
 export function collectUi() {
   return {
     menuScreen: document.getElementById("menu-screen"),
@@ -157,6 +165,20 @@ export function collectUi() {
   };
 }
 
+/**
+ * Creates the master UI controller, bindings DOM events to game logic.
+ * @param {Object} deps - Dependencies.
+ * @param {Object} deps.settings - Shared global settings object to mutate.
+ * @param {Array}  deps.levels - Array of available level data for the menu.
+ * @param {Function} deps.getSelectedLevelId - Getter for current level.
+ * @param {Function} deps.setSelectedLevelId - Setter for current level.
+ * @param {Function} deps.onLoadMenuPreview - Callback when switching maps in menu.
+ * @param {Function} deps.onStartRace - Callback to begin the actual gameplay.
+ * @param {Function} deps.onOpenMenu - Callback to exit to menu.
+ * @param {Function} deps.onTogglePause - Callback to toggle pause state.
+ * @param {Function} deps.ensureAudio - Callback to unlock WebAudio context on interaction.
+ * @returns {Object} Methods to interact with the UI system.
+ */
 export function createUiSystem({ settings, levels, getSelectedLevelId, setSelectedLevelId, onLoadMenuPreview, onStartRace, onOpenMenu, onTogglePause, ensureAudio }) {
   loadStoredSettings(settings);
 
@@ -189,7 +211,7 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     lastBlastLevelId: null,
     titleBlastTimer: null,
     titleBlastLoopTimer: null,
-    applySettingsNow: () => {},
+    applySettingsNow: () => { },
     minimap: {
       levelId: null,
       minX: 0,
@@ -506,7 +528,7 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
     ui.roomState.innerHTML = [
       `<div class="result-row"><span class="name">房间：${l.roomId}</span><span class="time">地图：${l.mapId}</span></div>`,
       `<div class="result-row"><span class="name">人数：${players.length}</span><span class="time">房主：${l.hostId || "-"}</span></div>`,
-      ...players.map((p, idx) => `<div class="result-row"><span class="pos">#${idx + 1}</span><span class="name">${p.nickname || p.id}${p.id===l.meId?" (你)":""}</span><span class="time">${l.ready?.[p.id] ? "已准备" : "未准备"}</span></div>`),
+      ...players.map((p, idx) => `<div class="result-row"><span class="pos">#${idx + 1}</span><span class="name">${p.nickname || p.id}${p.id === l.meId ? " (你)" : ""}</span><span class="time">${l.ready?.[p.id] ? "已准备" : "未准备"}</span></div>`),
     ].join("");
   }
 

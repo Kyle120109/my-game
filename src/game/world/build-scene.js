@@ -1,4 +1,14 @@
 ﻿import * as THREE from "three";
+
+/**
+ * [MODULE] build-scene: Foundational world generation.
+ * Handles lighting setups and sweeping terrain plane generation.
+ */
+
+/**
+ * Creates the foundational scene builders.
+ * @returns {Object} Methods to build lighting and chunked terrain geometry.
+ */
 export function createSceneBuilder({ settings }) {
   function buildLights(game, level) {
     if (game.scene.userData.lights) {
@@ -26,6 +36,14 @@ export function createSceneBuilder({ settings }) {
     game.scene.userData.lights = [hemi, sun];
     game.scene.userData.sun = sun;
   }
+  /**
+   * Generates a continuous rolling terrain plane using chunked buffering.
+   * Uses the level's `heightFn` to sample elevations, and assigns vertex colors 
+   * procedurally based on absolute altitude and gradient slope steepness.
+   * 
+   * Chunking is utilized so Three.js doesn't try to submit a massive, singular
+   * million-triangle plane to the GPU, preventing frustum culling bottlenecks.
+   */
   function buildTerrain(game, level) {
     const width = level.bounds.maxX - level.bounds.minX;
     const depth = level.bounds.maxZ - level.bounds.minZ;

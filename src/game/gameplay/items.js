@@ -1,6 +1,16 @@
 ﻿import * as THREE from "three";
 import { ITEM_TYPES, itemName, PHYSICS, STATE } from "../config.js";
 import { forwardFromHeading, distance2DSq } from "../levels.js";
+
+/**
+ * Mario Kart-style item collection, spawning, and usage system.
+ * Handles item blocks, random distribution bags, and projectile/hazard logic.
+ */
+
+/**
+ * Creates the Item System.
+ * @returns {Object} Methods for managing crates, using items, and animating projectiles.
+ */
 export function createItemSystem({ fx, setRaceMessage, tempVec3A, tempVec3B, tempVec3C, tempVec3D, applyKnockdown, isCheckpointTriggered }) {
   const itemTypePool = Array.from(new Set(ITEM_TYPES));
   const itemTypeCycleRepeats = 3;
@@ -522,6 +532,9 @@ export function createItemSystem({ fx, setRaceMessage, tempVec3A, tempVec3B, tem
       if (triggered) removeItemEffect(game, game.groundHazards, i);
     }
   }
+  /**
+   * Checks if a racer has touched an active item crate and rolls their item.
+   */
   function tryCollectItem(game, racer) {
     for (const crate of game.itemCrates) {
       if (!crate.active || crate.collected || racer.itemType) continue;
@@ -559,6 +572,10 @@ export function createItemSystem({ fx, setRaceMessage, tempVec3A, tempVec3B, tem
       }
     }
   }
+  /**
+   * Dispatches the active item effect when a racer presses the use button.
+   * Spawns ground hazards or tracking projectiles depending on item type.
+   */
   function useItem(game, racer) {
     if (!racer.itemType || racer.itemCooldown > 0 || racer.respawnTimer > 0) return false;
     const type = racer.itemType;

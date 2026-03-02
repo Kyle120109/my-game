@@ -1,6 +1,16 @@
 ﻿import * as THREE from "three";
 import { WORLD_UP } from "../config.js";
 import { surfaceNormal } from "../levels.js";
+
+/**
+ * [MODULE] checkpoints: Visual marker generation.
+ * Parses level configuration to place glowing arches indicating lap progress.
+ */
+
+/**
+ * Creates the checkpoint visual builder.
+ * @returns {Object} Method to distribute and spawn checkpoint meshes.
+ */
 export function createCheckpointBuilder({ tempVec3A, tempVec3B, tempVec3C, tempMat4 }) {
   function buildCheckpoints(game, level) {
     game.checkpointRoot.clear();

@@ -1,10 +1,16 @@
 import * as THREE from "three";
 import { GRAVITY } from "../config.js";
 
-// [MODULE] ragdoll: Custom lightweight Verlet physics for rider crashes
-// Used because the base game does not use a physics engine like Cannon.js
-// This creates a series of point masses connected by distance constraints
+/**
+ * Custom lightweight Verlet physics integration for rider crashes.
+ * Since the core game relies on arcade physics without an underlying rigid-body engine 
+ * (like Cannon or Ammo), this creates a point-mass network connected by distance 
+ * constraints to simulate a tumbling, flopping ragdoll body.
+ */
 
+/**
+ * Manages the physics nodes and constraints for a single racer's tumble sequence.
+ */
 export class RagdollSystem {
     constructor(racer, scene) {
         this.racer = racer;

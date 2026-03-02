@@ -1,7 +1,10 @@
 import * as THREE from "three";
 
-// [MODULE] ik: Lightweight procedural Inverse Kinematics for Two-Bone chains (arms/legs).
-// Used to perfectly snap the rider's hands to the physical handlebars.
+/**
+ * Lightweight procedural Inverse Kinematics for Two-Bone chains (arms/legs).
+ * Used exclusively to snap the procedural rider's hands perfectly to the 
+ * mechanical constraints of the steering handlebars in real-time.
+ */
 
 const tempVec = new THREE.Vector3();
 const tempTargetLocal = new THREE.Vector3();

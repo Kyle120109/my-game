@@ -24,7 +24,18 @@ export function setupRacers(textureSet) {
         // Create the procedural dirt mask for this specific racer
         const dirtMaskData = createDynamicDirtMask(512);
 
-        const addTube = (radius, length, pos, rot, mat = mats.frame, radial = 18) => {
+        // High Detail Frame Construction
+        const frameMat = mats.frame;
+        const weldMat = mats.chrome; // Or slightly darkened frame color
+
+        // Utility to blend joints
+        const addWeld = (pos, size = 0.055) => {
+            const weld = new THREE.Mesh(new THREE.SphereGeometry(size, 16, 16), weldMat);
+            weld.position.copy(pos);
+            bikeRoot.add(weld);
+        };
+
+        const addTube = (radius, length, pos, rot, mat = frameMat, radial = 24) => {
             const tube = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, length, radial), mat);
             tube.position.copy(pos);
             tube.rotation.set(rot.x, rot.y, rot.z);
@@ -32,138 +43,334 @@ export function setupRacers(textureSet) {
             return tube;
         };
 
-        addTube(0.06, 2.05, new THREE.Vector3(0, 0.85, 0), new THREE.Vector3(Math.PI / 2, 0, 0));
-        addTube(0.055, 1.15, new THREE.Vector3(0, 1.14, 0.3), new THREE.Vector3(Math.PI / 2, 0, 0));
-        addTube(0.05, 1.08, new THREE.Vector3(0, 0.72, -0.5), new THREE.Vector3(1.02, 0, 0));
-        addTube(0.05, 1.08, new THREE.Vector3(0, 0.72, 0.5), new THREE.Vector3(-1.02, 0, 0));
-        addTube(0.044, 0.94, new THREE.Vector3(0, 1.03, -0.58), new THREE.Vector3(0.66, 0, 0));
-        addTube(0.044, 0.94, new THREE.Vector3(0, 1.03, 0.58), new THREE.Vector3(-0.66, 0, 0));
+        // 1. Detailed Frame (Front Triangle)
+        // Top Tube
+        addTube(0.045, 1.0, new THREE.Vector3(0, 0.98, -0.05), new THREE.Vector3(Math.PI / 2 + 0.15, 0, 0));
+        // Down Tube
+        addTube(0.055, 1.05, new THREE.Vector3(0, 0.72, 0.2), new THREE.Vector3(Math.PI / 2 - 0.65, 0, 0));
+        // Seat Tube
+        addTube(0.04, 0.85, new THREE.Vector3(0, 0.8, -0.32), new THREE.Vector3(Math.PI / 2 - 0.2, 0, 0));
+        // Head Tube
+        addTube(0.05, 0.22, new THREE.Vector3(0, 0.95, 0.45), new THREE.Vector3(Math.PI / 2 - 0.38, 0, 0));
 
+        // Welds
+        addWeld(new THREE.Vector3(0, 0.92, 0.42), 0.055); // Top/Head
+        addWeld(new THREE.Vector3(0, 1.05, -0.4), 0.045); // Top/Seat
+        addWeld(new THREE.Vector3(0, 0.35, -0.15), 0.06); // Down/Seat/BB
+
+        // Bottom Bracket Shell
+        const bbShell = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.18, 20), frameMat);
+        bbShell.rotation.z = Math.PI / 2;
+        bbShell.position.set(0, 0.35, -0.15);
+        bikeRoot.add(bbShell);
+
+        // 2. Full Suspension Swingarm (Rear Triangle)
         const rearSwingPivot = new THREE.Group();
-        rearSwingPivot.position.set(0, 0.6, -0.36);
+        rearSwingPivot.position.set(0, 0.42, -0.2); // Moved down near BB
         bikeRoot.add(rearSwingPivot);
-        addTube(0.036, 1.02, new THREE.Vector3(0, -0.12, -0.44), new THREE.Vector3(1.24, 0, 0), mats.darkRubber, 14);
 
-        const rearArm = addTube(0.038, 1.10, new THREE.Vector3(0, -0.27, -0.47), new THREE.Vector3(Math.PI / 2 + 0.52, 0, 0), mats.darkRubber, 14);
-        rearSwingPivot.add(rearArm);
+        // Chainstays
+        const chainStayL = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.015, 0.85, 16), frameMat);
+        chainStayL.position.set(-0.08, -0.05, -0.38);
+        chainStayL.rotation.x = Math.PI / 2 + 0.1;
+        const chainStayR = chainStayL.clone();
+        chainStayR.position.x = 0.08;
+        rearSwingPivot.add(chainStayL, chainStayR);
 
+        // Seatstays
+        const seatStayL = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.015, 0.8, 16), frameMat);
+        seatStayL.position.set(-0.06, 0.3, -0.38);
+        seatStayL.rotation.x = Math.PI / 2 + 0.8;
+        const seatStayR = seatStayL.clone();
+        seatStayR.position.x = 0.06;
+        rearSwingPivot.add(seatStayL, seatStayR);
+
+        // Dropouts
+        const dropoutL = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.1, 0.15), weldMat);
+        dropoutL.position.set(-0.06, -0.1, -0.75);
+        const dropoutR = dropoutL.clone();
+        dropoutR.position.x = 0.06;
+        rearSwingPivot.add(dropoutL, dropoutR);
+
+        // Suspension Linkage & Shock
         const shockPivot = new THREE.Group();
-        shockPivot.position.set(0, 0.95, -0.36);
+        shockPivot.position.set(0, 0.8, -0.2); // Attached to Seat Tube
         bikeRoot.add(shockPivot);
-        const shock = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.42, 16), mats.chrome);
-        shock.rotation.x = Math.PI / 2.5;
-        shock.position.z = -0.06;
-        shockPivot.add(shock);
 
+        const shockBody = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.25, 16), mats.darkRubber);
+        shockBody.rotation.x = Math.PI / 2 - 0.2;
+        shockBody.position.set(0, -0.1, -0.15);
+        const shockCoil = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.008, 16, 64, Math.PI * 12), mats.accent);
+        shockCoil.rotation.x = Math.PI / 2 - 0.2;
+        shockCoil.position.set(0, -0.1, -0.15);
+        shockPivot.add(shockBody, shockCoil);
+
+        // 3. Cockpit & Steering
         const handleBarRoot = new THREE.Group();
-        handleBarRoot.position.set(0, 0.98, 0.82);
+        handleBarRoot.position.set(0, 1.1, 0.52);
         handleBarRoot.rotation.x = -0.38;
         bikeRoot.add(handleBarRoot);
 
-        const stem = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.16), mats.chrome);
-        stem.position.set(0, 0.2, 0.04);
-        handleBarRoot.add(stem);
+        // Stem
+        const stemBase = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.08, 16), mats.chrome);
+        const stemBody = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.12), mats.chrome);
+        stemBody.position.set(0, 0.02, 0.06);
+        const stemplat = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.08, 16), mats.chrome);
+        stemplat.rotation.z = Math.PI / 2;
+        stemplat.position.set(0, 0.02, 0.12);
+        handleBarRoot.add(stemBase, stemBody, stemplat);
 
         const handleWrapper = new THREE.Group();
-        handleWrapper.position.set(0, 0.2, 0.08);
+        handleWrapper.position.set(0, 0.02, 0.12);
         handleWrapper.rotation.x = 0.38;
         handleBarRoot.add(handleWrapper);
 
-        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.037, 0.037, 0.76, 20), mats.chrome);
-        handle.rotation.z = Math.PI / 2;
+        // Handlebars
+        const barCurve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(-0.35, -0.05, 0.05),
+            new THREE.Vector3(-0.15, 0, 0),
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(0.15, 0, 0),
+            new THREE.Vector3(0.35, -0.05, 0.05)
+        ]);
+        const handle = new THREE.Mesh(new THREE.TubeGeometry(barCurve, 20, 0.018, 12, false), mats.chrome);
         handleWrapper.add(handle);
-        const gripGeo = new THREE.CylinderGeometry(0.052, 0.052, 0.17, 16);
+
+        // Grips
+        const gripGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.15, 16);
         const gripL = new THREE.Mesh(gripGeo, mats.darkRubber);
         gripL.rotation.z = Math.PI / 2;
-        gripL.position.set(-0.33, 0, 0);
+        gripL.rotation.y = -0.15;
+        gripL.position.set(-0.33, -0.04, 0.04);
+
+        // Grip texturing (ribs)
+        for (let i = 0; i < 8; i++) {
+            const rib = new THREE.Mesh(new THREE.TorusGeometry(0.023, 0.002, 8, 16), mats.darkRubber);
+            rib.position.y = -0.06 + (i * 0.015);
+            rib.rotation.x = Math.PI / 2;
+            gripL.add(rib);
+        }
+
         const gripR = gripL.clone();
-        gripR.position.set(0.33, 0, 0);
+        gripR.rotation.y = 0.15;
+        gripR.position.set(0.33, -0.04, 0.04);
+
+        // Brake Levers
+        const leverGeo = new THREE.BoxGeometry(0.01, 0.01, 0.1);
+        const leverL = new THREE.Mesh(leverGeo, mats.chrome);
+        leverL.position.set(-0.25, -0.02, 0.05);
+        leverL.rotation.y = -0.2;
+        const leverR = new THREE.Mesh(leverGeo, mats.chrome);
+        leverR.position.set(0.25, -0.02, 0.05);
+        leverR.rotation.y = 0.2;
 
         const gripTargetL = new THREE.Group();
-        gripTargetL.position.set(-0.35, 0.03, 0.05);
+        gripTargetL.position.set(-0.35, 0, 0.04);
         const gripTargetR = new THREE.Group();
-        gripTargetR.position.set(0.35, 0.03, 0.05);
-        handleWrapper.add(gripL, gripR, gripTargetL, gripTargetR);
+        gripTargetR.position.set(0.35, 0, 0.04);
+        handleWrapper.add(gripL, gripR, leverL, leverR, gripTargetL, gripTargetR);
 
+        // 4. Suspension Fork
         const forkPivot = new THREE.Group();
         forkPivot.position.set(0, 0, 0);
         handleBarRoot.add(forkPivot);
-        const forkLeft = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 1.1, 14), mats.chrome);
-        forkLeft.position.set(-0.12, -0.45, 0);
-        const forkRight = forkLeft.clone();
-        forkRight.position.x = 0.12;
-        forkPivot.add(forkLeft, forkRight);
 
+        // Stanchions (Upper tubes)
+        const stanchionL = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 16), mats.chrome);
+        stanchionL.position.set(-0.08, -0.25, 0);
+        const stanchionR = stanchionL.clone();
+        stanchionR.position.x = 0.08;
+
+        // Crown
+        const crown = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.06, 0.06), frameMat);
+        crown.position.set(0, -0.05, 0);
+
+        // Lower Legs
+        const lowerL = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.55, 16), frameMat);
+        lowerL.position.set(-0.08, -0.65, 0);
+        const lowerR = lowerL.clone();
+        lowerR.position.x = 0.08;
+
+        // Arch/Brace
+        const archCurve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(-0.08, -0.4, 0),
+            new THREE.Vector3(0, -0.35, 0.05),
+            new THREE.Vector3(0.08, -0.4, 0)
+        ]);
+        const arch = new THREE.Mesh(new THREE.TubeGeometry(archCurve, 10, 0.015, 8, false), frameMat);
+
+        forkPivot.add(stanchionL, stanchionR, crown, lowerL, lowerR, arch);
+
+        // 5. High Detail Wheels & Brakes
         const wheelMat = new THREE.MeshStandardMaterial({ color: 0x12161d, roughness: 0.9, metalness: 0.14, map: textureSet.rubber });
-        const rimMat = new THREE.MeshStandardMaterial({ color: 0xb7c2ce, roughness: 0.22, metalness: 0.84, map: textureSet.metal });
-        const tireGeo = new THREE.TorusGeometry(0.49, 0.065, 24, 72);
-        const rimGeo = new THREE.TorusGeometry(0.44, 0.02, 16, 56);
-        const hubMat = new THREE.MeshStandardMaterial({ color: 0xc7d1db, roughness: 0.24, metalness: 0.86, map: textureSet.metal });
-        const hubGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.26, 20);
-        const brakeDiscGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.018, 28);
-        const brakeDiscMat = new THREE.MeshStandardMaterial({ color: 0x9ba4b0, roughness: 0.34, metalness: 0.72, map: textureSet.metal });
-        const valveGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.085, 8);
+        const rimMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5, metalness: 0.5 });
+        const spokeMat = mats.chrome;
+
+        // Detailed Tire with Treads
+        const tireRadius = 0.35;
+        const tireThickness = 0.05;
+        const tireGeo = new THREE.TorusGeometry(tireRadius, tireThickness, 24, 64);
+        const rimGeo = new THREE.TorusGeometry(tireRadius - 0.03, 0.02, 16, 64);
+
+        // Add Knobby Treads
+        const treadGeo = new THREE.BoxGeometry(0.02, 0.015, 0.04);
+        const treadCount = 60;
+        const centerTreads = new THREE.InstancedMesh(treadGeo, wheelMat, treadCount);
+        const sideTreadsL = new THREE.InstancedMesh(treadGeo, wheelMat, treadCount);
+        const sideTreadsR = new THREE.InstancedMesh(treadGeo, wheelMat, treadCount);
+
+        const dummy = new THREE.Object3D();
+        for (let i = 0; i < treadCount; i++) {
+            const angle = (i / treadCount) * Math.PI * 2;
+
+            // Center
+            dummy.position.set(Math.cos(angle) * (tireRadius + tireThickness), Math.sin(angle) * (tireRadius + tireThickness), 0);
+            dummy.lookAt(0, 0, 0);
+            dummy.updateMatrix();
+            centerTreads.setMatrixAt(i, dummy.matrix);
+
+            // Side L
+            dummy.position.set(Math.cos(angle) * (tireRadius + tireThickness * 0.7), Math.sin(angle) * (tireRadius + tireThickness * 0.7), 0.035);
+            dummy.lookAt(0, 0, 0);
+            dummy.rotateX(0.5);
+            dummy.updateMatrix();
+            sideTreadsL.setMatrixAt(i, dummy.matrix);
+
+            // Side R
+            dummy.position.set(Math.cos(angle) * (tireRadius + tireThickness * 0.7), Math.sin(angle) * (tireRadius + tireThickness * 0.7), -0.035);
+            dummy.lookAt(0, 0, 0);
+            dummy.rotateX(-0.5);
+            dummy.updateMatrix();
+            sideTreadsR.setMatrixAt(i, dummy.matrix);
+        }
+
+        const hubGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.12, 20);
+        const brakeDiscGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.005, 32);
+
+        // Brake Calipers (Static)
+        const caliperGeo = new THREE.BoxGeometry(0.04, 0.06, 0.03);
+        const rearCaliper = new THREE.Mesh(caliperGeo, mats.accent);
+        rearCaliper.position.set(0.12, 0.05, -0.05);
+        const frontCaliper = new THREE.Mesh(caliperGeo, mats.accent);
+        frontCaliper.position.set(-0.05, 0.12, 0.05);
+
         const rearWheelMount = new THREE.Group();
-        rearWheelMount.position.set(0, -0.55, -0.95);
-        rearSwingPivot.add(rearWheelMount);
+        rearWheelMount.position.set(0, -0.1, -0.75); // Matches dropout location
+        rearSwingPivot.add(rearWheelMount, rearCaliper);
         const rearWheelSpin = new THREE.Group();
         rearWheelMount.add(rearWheelSpin);
-        const rearWheelVisual = new THREE.Group();
-        rearWheelSpin.add(rearWheelVisual);
+
         const rearTire = new THREE.Mesh(tireGeo, wheelMat);
-        rearTire.rotation.y = Math.PI / 2;
         const rearRim = new THREE.Mesh(rimGeo, rimMat);
-        rearRim.rotation.y = Math.PI / 2;
-        const rearHub = new THREE.Mesh(hubGeo, hubMat);
-        rearHub.rotation.z = Math.PI / 2;
-        const rearBrake = new THREE.Mesh(brakeDiscGeo, brakeDiscMat);
-        rearBrake.rotation.z = Math.PI / 2;
-        rearBrake.position.x = -0.095;
-        const rearValve = new THREE.Mesh(valveGeo, hubMat);
-        rearValve.position.set(0.06, 0.52, 0);
-        rearWheelVisual.add(rearTire, rearRim, rearHub, rearBrake, rearValve);
-        addSpokes(rearWheelVisual, 0.44, 0, 8, mats.chrome);
+        const rearHub = new THREE.Mesh(hubGeo, mats.chrome);
+        rearHub.rotation.x = Math.PI / 2;
+        const rearBrake = new THREE.Mesh(brakeDiscGeo, mats.chrome);
+        rearBrake.rotation.x = Math.PI / 2;
+        rearBrake.position.z = -0.05;
+
+        // Cassette (Gears)
+        const cassette = new THREE.Group();
+        for (let i = 0; i < 8; i++) {
+            const cog = new THREE.Mesh(new THREE.CylinderGeometry(0.1 - (i * 0.008), 0.1 - (i * 0.008), 0.005, 24), mats.chrome);
+            cog.rotation.x = Math.PI / 2;
+            cog.position.z = 0.02 + (i * 0.006);
+            cassette.add(cog);
+        }
+
+        rearWheelSpin.add(rearTire, centerTreads, sideTreadsL, sideTreadsR, rearRim, rearHub, rearBrake, cassette);
+        addSpokes(rearWheelSpin, tireRadius - 0.03, 0.03, 16, spokeMat);
+        addSpokes(rearWheelSpin, tireRadius - 0.03, -0.03, 16, spokeMat);
+        rearWheelSpin.rotation.y = Math.PI / 2;
 
         const frontWheelMount = new THREE.Group();
-        frontWheelMount.position.set(0, -1.0, 0);
-        forkPivot.add(frontWheelMount);
+        frontWheelMount.position.set(0, -0.9, 0); // Dropouts on fork
+        forkPivot.add(frontWheelMount, frontCaliper);
         const frontWheelSpin = new THREE.Group();
         frontWheelMount.add(frontWheelSpin);
-        const frontWheelVisual = new THREE.Group();
-        frontWheelSpin.add(frontWheelVisual);
-        const frontTire = new THREE.Mesh(tireGeo, wheelMat);
-        frontTire.rotation.y = Math.PI / 2;
-        const frontRim = new THREE.Mesh(rimGeo, rimMat);
-        frontRim.rotation.y = Math.PI / 2;
-        const frontHub = new THREE.Mesh(hubGeo, hubMat);
-        frontHub.rotation.z = Math.PI / 2;
-        const frontBrake = new THREE.Mesh(brakeDiscGeo, brakeDiscMat);
-        frontBrake.rotation.z = Math.PI / 2;
-        frontBrake.position.x = 0.095;
-        const frontValve = new THREE.Mesh(valveGeo, hubMat);
-        frontValve.position.set(-0.06, -0.52, 0);
-        frontWheelVisual.add(frontTire, frontRim, frontHub, frontBrake, frontValve);
-        addSpokes(frontWheelVisual, 0.44, 0, 8, mats.chrome);
 
-        const seatPost = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.32, 12), mats.chrome);
-        seatPost.position.set(0, 1.2, -0.24);
-        const seat = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.08, 0.28), mats.darkRubber);
-        seat.position.set(0, 1.34, -0.24);
+        const frontTire = rearTire.clone();
+        const frontCenterTreads = centerTreads.clone();
+        const frontSideL = sideTreadsL.clone();
+        const frontSideR = sideTreadsR.clone();
+        const frontRim = rearRim.clone();
+        const frontHub = rearHub.clone();
+        const frontBrake = rearBrake.clone();
+        frontBrake.position.z = 0.05; // Flip disc to other side
+
+        frontWheelSpin.add(frontTire, frontCenterTreads, frontSideL, frontSideR, frontRim, frontHub, frontBrake);
+        addSpokes(frontWheelSpin, tireRadius - 0.03, 0.03, 16, spokeMat);
+        addSpokes(frontWheelSpin, tireRadius - 0.03, -0.03, 16, spokeMat);
+        frontWheelSpin.rotation.y = Math.PI / 2;
+
+        // 6. Seating
+        const seatPost = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.25, 12), mats.chrome);
+        seatPost.position.set(0, 1.1, -0.4);
+        seatPost.rotation.x = -0.2;
+
+        // Sculpted Saddle
+        const seatShape = new THREE.Shape();
+        seatShape.moveTo(0, 0.15);
+        seatShape.quadraticCurveTo(0.08, 0.05, 0.08, -0.1);
+        seatShape.quadraticCurveTo(0, -0.15, -0.08, -0.1);
+        seatShape.quadraticCurveTo(-0.08, 0.05, 0, 0.15);
+        const seatGeo = new THREE.ExtrudeGeometry(seatShape, { depth: 0.04, bevelEnabled: true, bevelSize: 0.01 });
+        seatGeo.center();
+        const seat = new THREE.Mesh(seatGeo, mats.darkRubber);
+        seat.rotation.x = Math.PI / 2 + 0.1;
+        seat.position.set(0, 1.22, -0.42);
         bikeRoot.add(seatPost, seat);
 
+        // 7. Drivetrain (Cranks, Chainring, Chain, Pedals)
         const crankRoot = new THREE.Group();
-        crankRoot.position.set(0, 0.7, -0.02);
+        crankRoot.position.set(0, 0.35, -0.15); // Matches new BB shell
         bikeRoot.add(crankRoot);
-        const pedalArmA = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.32, 8), mats.chrome);
-        pedalArmA.rotation.z = Math.PI / 2;
-        pedalArmA.position.set(0.16, 0, 0.3);
-        const pedalArmB = pedalArmA.clone();
-        pedalArmB.position.set(-0.16, 0, -0.3);
-        const pedalA = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.05, 0.1), mats.darkRubber);
-        pedalA.position.set(0.22, 0, 0.3);
+
+        // Chainring with teeth
+        const chainring = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.01, 32), mats.chrome);
+        chainring.rotation.x = Math.PI / 2;
+        chainring.position.z = 0.05;
+        crankRoot.add(chainring);
+
+        // Derailleur (Static representation on swingarm)
+        const derailleur = new THREE.Group();
+        derailleur.position.set(0.06, -0.15, -0.75);
+        const cage = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.12, 0.03), mats.chrome);
+        cage.rotation.z = -0.5;
+        const pulley1 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.02, 12), frameMat);
+        pulley1.rotation.x = Math.PI / 2;
+        pulley1.position.set(0, 0.04, 0);
+        const pulley2 = pulley1.clone();
+        pulley2.position.set(0.03, -0.04, 0);
+        derailleur.add(cage, pulley1, pulley2);
+        rearSwingPivot.add(derailleur);
+
+        // Chain Loop
+        const chainCurve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(0.05, 0.12, 0), // Top of chainring
+            new THREE.Vector3(0.05, 0.45, -0.6), // Top of cassette (relative to BB)
+            new THREE.Vector3(0.05, 0.25, -0.65), // Through derailleur
+            new THREE.Vector3(0.05, -0.12, 0), // Bottom of chainring
+        ], true);
+        const chain = new THREE.Mesh(new THREE.TubeGeometry(chainCurve, 24, 0.008, 4, true), mats.chrome);
+        crankRoot.add(chain);
+
+        // Crank Arms & Pedals
+        const crankArmL = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.18, 0.015), mats.chrome);
+        crankArmL.position.set(-0.07, 0, 0);
+        crankArmL.rotation.z = Math.PI / 2;
+        crankArmL.position.set(0, 0.09, 0.07); // Right side (A)
+        const crankArmR = crankArmL.clone();
+        crankArmR.position.set(0, -0.09, -0.07); // Left side (B)
+
+        // Platform Pedals with pins
+        const pedalGeo = new THREE.BoxGeometry(0.1, 0.02, 0.08);
+        const pedalA = new THREE.Mesh(pedalGeo, mats.darkRubber);
+        pedalA.position.set(0, 0.18, 0.08);
         const pedalB = pedalA.clone();
-        pedalB.position.set(-0.22, 0, -0.3);
-        crankRoot.add(pedalArmA, pedalArmB, pedalA, pedalB);
+        pedalB.position.set(0, -0.18, -0.08);
+
+        crankRoot.add(crankArmL, crankArmR, pedalA, pedalB);
+
 
         const shieldOrbs = new THREE.Group();
         shieldOrbs.visible = false;

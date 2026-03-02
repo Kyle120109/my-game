@@ -1,5 +1,11 @@
 ﻿import * as THREE from "three";
 
+/**
+ * [LEVEL CONFIG] serpent
+ * Defines the track spline, heightmap, and prop distributions for the Serpent map.
+ * The height function uses aggressive Gaussian distributions (`Math.exp`) to carve 
+ * sheer canyon walls, sinkholes, and steep ridges dynamically across the terrain.
+ */
 export const serpentLevel = {
   id: "serpent",
   name: "裂脊蛇行",

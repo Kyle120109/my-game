@@ -1,7 +1,14 @@
 ﻿import { STATE } from "./config.js";
 
-// [MODULE] input: 输入采集 + 按键队列。
+/**
+ * Manages raw keyboard input capture and converts it into a structural state.
+ * Contains both continuous state and single-fire queued events.
+ */
 
+/**
+ * Creates the default isolated input state object representing all buttons/axes.
+ * @returns {Object} A pristine input state struct.
+ */
 export function createInputState() {
   return {
     forward: false,
@@ -28,6 +35,11 @@ export function createInputState() {
   };
 }
 
+/**
+ * Hard resets all buttons/axes in the provided state object.
+ * Used during transitions (e.g., pause, menu) to prevent stuck keys.
+ * @param {Object} input - Processing input state to clear.
+ */
 export function clearInputState(input) {
   input.forward = false;
   input.brake = false;
@@ -52,6 +64,11 @@ export function clearInputState(input) {
   input.debugU = false;
 }
 
+/**
+ * Binds global keyboard event listeners to the DOM window and maps them to input state flags.
+ * Also handles specific hotkey combos (e.g. Escape to pause).
+ * @param {Object} deps - System hook dependencies.
+ */
 export function bindInput({ input, ensureAudio, getState, ui, openMenu, togglePause }) {
   window.addEventListener("keydown", (event) => {
     ensureAudio();

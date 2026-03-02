@@ -4,7 +4,21 @@ import { samplePath, surfaceNormal, distanceToTrack } from "../../levels.js";
 import { buildOrthonormalFrame } from "../math.js";
 import { pushBoxObstacle } from "../obstacles.js";
 
+/**
+ * [MODULE] environments/harbor: Thematic world builder for the Harbor zone.
+ * Responsible for placing water planes, container stacks, gantry cranes,
+ * and nautical assets. Uses spatial clustering to maintain high framerates.
+ */
+
+/**
+ * Creates the Harbor environment specific builder.
+ */
 export function createHarborEnvironmentBuilder({ modelLibrary, tempVec3A, tempVec3B, tempVec3C = new THREE.Vector3(), tempMat4 = new THREE.Matrix4() }) {
+  /**
+   * Constructs the harbor scenery.
+   * Container stacks are deliberately spaced out and spawned in localized clusters 
+   * near the track rather than filling the entire grid, maximizing GPU performance.
+   */
   function buildHarborEnvironment(game, level, rng) {
     const containerMats = [
       new THREE.MeshStandardMaterial({ color: 0xba4a22, roughness: 0.84 }),

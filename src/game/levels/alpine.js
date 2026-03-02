@@ -1,5 +1,10 @@
 import * as THREE from "three";
 
+/**
+ * [LEVEL CONFIG] alpine
+ * Defines the track spline, heightmap, and prop distributions for the Alpine map.
+ * The height function generates jagged ridges and deep glacial crevasses.
+ */
 export const alpineLevel = {
     id: "alpine",
     name: "冰川遗迹 (Frost Peak)",

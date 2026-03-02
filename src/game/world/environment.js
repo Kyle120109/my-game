@@ -1,6 +1,20 @@
 ﻿import * as THREE from "three";
 import { createRng, samplePath, surfaceNormal, distanceToTrack } from "../levels.js";
+
+/**
+ * [MODULE] environment: Procedural prop placement and scattering.
+ * Populates the map with thematic trees, rocks, shrubs, and physical hazards.
+ */
+
+/**
+ * Creates the scattering builder.
+ * @returns {Object} Method to populate environmental scatter.
+ */
 export function createEnvironmentBuilder({ modelLibrary, tempVec3A, buildHarborEnvironment, buildUrbanEnvironment }) {
+  /**
+   * Distributes physical colliders and visual props across the terrain 
+   * according to biome-specific rules and stochastic sampling.
+   */
   function buildEnvironment(game, level) {
     const rng = createRng(level.seed ^ 0x2048);
     if (level.id === "harbor") {

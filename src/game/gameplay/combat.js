@@ -1,7 +1,24 @@
 ﻿import * as THREE from "three";
 import { STATE, PUNCH_ANIM_TIME, PHYSICS } from "../config.js";
 import { forwardFromHeading, horizontalSpeed } from "../levels.js";
+
+/**
+ * Hand-to-hand combat, item impacts, and collision resolution system.
+ * Governs the rules for knocking down opponents and applying hit impulses.
+ */
+
+/**
+ * Creates the combat interaction manager.
+ * @returns {Object} Operations for finding targets, punching, and taking damage.
+ */
 export function createCombatSystem({ settings, fx, setRaceMessage, tempVec3A }) {
+  /**
+   * Scans ahead of the attacker to find the physically closest rival.
+   * @param {Object} game - Game state.
+   * @param {Object} attacker - The entity initiating the search.
+   * @param {number} maxDist - Maximum detection radius.
+   * @returns {Object|null} The ideal target, or null if none are in range.
+   */
   function findBestPunchTarget(game, attacker, maxDist) {
     let best = null;
     let bestScore = -1;
@@ -23,6 +40,11 @@ export function createCombatSystem({ settings, fx, setRaceMessage, tempVec3A }) 
     }
     return best;
   }
+  /**
+   * Executes a melee attack, locking the attacker into an animation and
+   * applying lateral impulse to anyone caught in the arc.
+   * @returns {boolean} True if at least one target was hit.
+   */
   function tryPunch(game, attacker) {
     // === UNIVERSAL 3-SECOND ATTACK BAN (uses racingStartTime for accurate timing) ===
     if (game.state === STATE.RACING && (game.raceElapsed - game.racingStartTime) < 3.0) return false;
@@ -55,6 +77,15 @@ export function createCombatSystem({ settings, fx, setRaceMessage, tempVec3A }) 
     }
     return hits > 0;
   }
+  /**
+   * Forces a racer into a ragdoll/knockdown state.
+   * Halts input, activates physical ragdoll, and applies visual effects.
+   * @param {Object} game - Game State
+   * @param {Object} target - The victim
+   * @param {THREE.Vector3} direction - Direction vector of the hit impulse
+   * @param {number} power - Multiplier for stun time and impulse force
+   * @param {boolean} fromHit - Indicates if this was from a melee punch
+   */
   function applyKnockdown(game, target, direction, power = 1, fromHit = false) {
     if (target.finished || target.respawnTimer > 0) return;
 

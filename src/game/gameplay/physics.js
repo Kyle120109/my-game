@@ -2,7 +2,27 @@
 import { STATE, GRAVITY, BIKE_CLEARANCE, PHYSICS } from "../config.js";
 import { samplePath, projectProgressNear, surfaceNormal, horizontalSpeed, forwardFromHeading, shortestAngle, damp } from "../levels.js";
 import { RagdollSystem } from "./ragdoll.js";
+
+/**
+ * Custom arcade physics engine for the racers.
+ * Uses a fixed-timestep Euler integration model focused on velocity-based 
+ * lateral grip, surface normal projection, and aggressive arcade drag.
+ */
+
+/**
+ * Creates the physics simulation system.
+ * @param {Object} deps - Extracted dependency methods.
+ * @returns {Object} Public API containing the update loop for racers.
+ */
 export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, tempVec3B, tempVec3C, tempVec3D, tempVec3E, applyKnockdown, triggerRespawn, tryCollectItem, getProjectionSegmentRadius }) {
+  /**
+   * Main integration step for a single racer entity.
+   * Calculates propulsion, gravity, drag, lateral friction, and handles track projection.
+   * @param {Object} game - Game state.
+   * @param {Object} racer - The racer to apply physics to.
+   * @param {number} dt - Fixed delta time.
+   * @param {boolean} isMenu - Flag to disable competitive mechanics during menu orbits.
+   */
   function updateRacerPhysics(game, racer, dt, isMenu) {
     if (!racer.ragdoll) {
       racer.ragdoll = new RagdollSystem(racer, game.scene);
@@ -26,6 +46,8 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
     let right = tempVec3A.set(forward.z, 0, -forward.x);
     const accel = tempVec3B.set(0, 0, 0);
 
+    // [PHYSICS: Grounded] When touching the terrain, driving force is calculated 
+    // based on local slope (uphill slows you down, downhill speeds you up).
     if (racer.grounded) {
       const normal = surfaceNormal(game.activeLevel, racer.position.x, racer.position.z);
       forward.copy(headingForward).addScaledVector(normal, -headingForward.dot(normal));
@@ -80,6 +102,9 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
 
       tempVec3D.set(racer.velocity.x, 0, racer.velocity.z);
       accel.addScaledVector(tempVec3D, -(PHYSICS.baseDrag + speed * PHYSICS.speedDragFactor));
+
+      // [PHYSICS: Track Boundaries] Push vehicles back toward the track center 
+      // if they drift too far out. Apply mud slowdown if completely off-road.
 
       const proj = projectProgressNear(
         game.activeLevel,

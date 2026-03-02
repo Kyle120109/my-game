@@ -1,6 +1,16 @@
 ﻿import * as THREE from "three";
 import { STATE, BIKE_CLEARANCE, PHYSICS } from "../config.js";
 import { samplePath, projectProgress, surfaceNormal, signedProgressDelta, distance2DSq, forwardFromHeading } from "../levels.js";
+
+/**
+ * Race progress, checkpoint gates, and rubber-banding AI logic.
+ * Enforces course following and handles respawns/teleportation.
+ */
+
+/**
+ * Creates the race progression and checkpoint system.
+ * @returns {Object} Methods for tracking laps, respawns, and catchup mechanics.
+ */
 export function createCheckpointSystem({ ui, fx, setRaceMessage, tempVec3A, tempVec3B }) {
   function isCheckpointTriggered(game, racer, checkpointIndex) {
     if (!racer) return false;
@@ -55,6 +65,10 @@ export function createCheckpointSystem({ ui, fx, setRaceMessage, tempVec3A, temp
     game.racingStartTime = game.raceElapsed; // mark the exact moment racing begins
     ui.countdown.textContent = "";
   }
+  /**
+   * Evaluates if a racer has successfully passed their next required checkpoint.
+   * Handles loop detection, plane crossing, and strict radius capture.
+   */
   function checkCheckpointsAndFinish(game, racer) {
     if (racer.finished) return;
     const checkpointCount = getCheckpointCount(game);
@@ -230,6 +244,11 @@ export function createCheckpointSystem({ ui, fx, setRaceMessage, tempVec3A, temp
     }
     return best;
   }
+  /**
+   * Evaluates trailing AI racers and attempts to silently teleport them 
+   * closer to the main pack to maintain race pressure (rubber-banding).
+   * Ensures teleportation only occurs in the player's rear blind spot.
+   */
   function updateStealthCatchup(game, dt) {
     if (!game.player || game.state !== STATE.RACING) return;
     if (game.raceElapsed < 15) return;

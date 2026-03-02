@@ -4,9 +4,18 @@ import { surfaceNormal, projectProgress, forwardFromHeading, horizontalSpeed, da
 import { AnimationStateMachine } from "./gameplay/anim-state-machine.js";
 import { solveTwoBoneIK } from "./gameplay/ik.js";
 
-// [MODULE] entities: 实体定义（玩家/AI 载具）+ 可视动画。
+/**
+ * Manages player and AI racers, their physical properties, and procedural animation.
+ * Handles spawning logic and calculates complex visual state including IK and suspension.
+ */
 
 
+/**
+ * Creates the entity system capable of spawning racers and updating their visual state.
+ * @param {Object} deps - Dependencies.
+ * @param {Object} deps.modelLibrary - Factory for creating 3D racer models.
+ * @returns {Object} Provided API for racer management (spawnRacers, updateRacerVisual).
+ */
 export function createEntitiesSystem({ modelLibrary }) {
   const tempVec3A = new THREE.Vector3();
   const tempVec3B = new THREE.Vector3();
@@ -25,6 +34,13 @@ export function createEntitiesSystem({ modelLibrary }) {
     return pool.slice(0, Math.max(0, Math.min(requestedCount, pool.length)));
   }
 
+  /**
+   * Spawns racers onto the track's starting grid based on path and lane calculation.
+   * Modifies the game state in-place.
+   * @param {Object} game - Global game state.
+   * @param {number} count - Total number of racers to spawn.
+   * @param {boolean} allAi - If true, do not spawn a player; only bots.
+   */
   function spawnRacers(game, count, allAi) {
     game.racers = [];
     game.racerRoot.clear();
@@ -197,6 +213,14 @@ export function createEntitiesSystem({ modelLibrary }) {
     return racer;
   }
 
+  /**
+   * Updates the visual representation of a racer.
+   * Includes wheel spin, steering UI, procedural suspension, body leaning, and IK limb placement.
+   * Requires a fixed dt to ensure procedural spring physics remain stable.
+   * @param {Object} game - Global game state.
+   * @param {Object} racer - The specific racer entity.
+   * @param {number} [dt=FIXED_DT] - Time delta.
+   */
   function updateRacerVisual(game, racer, dt = FIXED_DT) {
     racer.group.position.copy(racer.position);
     const speed = horizontalSpeed(racer.velocity);
@@ -390,8 +414,8 @@ export function createEntitiesSystem({ modelLibrary }) {
       }
 
       // Late update: Two-Bone IK for arms.
-      // IMPORTANT: Only run IK when NOT punching. The punch animation sets
-      // shoulder/elbow/wrist rotations and the IK would silently overwrite them.
+      // Constraint: Only run IK when NOT punching. The punch animation directly sets
+      // absolute shoulder/elbow/wrist rotations. Running IK simultaneously would silently override them.
       if (punchAmount === 0 && racer.gripL && racer.gripR) {
         // Force fully updated world matrices down the entire group hierarchy
         // This is crucial, otherwise the IK targets behind one frame or parent matrices

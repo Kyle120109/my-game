@@ -1,7 +1,22 @@
 ﻿import * as THREE from "three";
 import { STATE, PHYSICS } from "../config.js";
 import { samplePath, surfaceNormal, forwardFromHeading, horizontalSpeed, shortestAngle } from "../levels.js";
+
+/**
+ * Controller input processor for both Human and AI players.
+ * Translates raw inputs or calculated AI desires into steering targets and throttle states.
+ */
+
+/**
+ * Creates the global control mapping system.
+ * @param {Object} deps - Dependencies.
+ * @returns {Object} Public API for updating human and bot controls.
+ */
 export function createControlSystem({ input, settings, tempVec3A, tempVec3B, tempVec3C }) {
+  /**
+   * Maps raw keyboard inputs to the player racer's throttle, brake, and steering targets.
+   * Includes minor soft-assist to help align the bike with the track.
+   */
   function updatePlayerControls(game, racer, dt) {
     const wantsForward = input.forward;
     const wantsBrake = input.brake;
@@ -50,6 +65,15 @@ export function createControlSystem({ input, settings, tempVec3A, tempVec3B, tem
       racer.targetSteer = 0;
     }
   }
+  /**
+   * Evaluates AI driving logic. Combines look-ahead tracking, obstacle avoidance,
+   * drafting, pacing rubber-banding, and combat decision making.
+   * @param {Object} game - Game state.
+   * @param {Object} racer - AI racer entity.
+   * @param {number} dt - Fixed delta time.
+   * @param {boolean} isMenu - Menu idle orbit flag.
+   * @param {Object} combatAPI - Actions to execute punches or items.
+   */
   function updateAiControls(game, racer, dt, isMenu, { tryPunch, useItem, findBestPunchTarget }) {
 
     if (!racer.profile) return;

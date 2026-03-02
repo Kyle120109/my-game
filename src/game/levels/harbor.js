@@ -1,5 +1,11 @@
 import * as THREE from "three";
 
+/**
+ * [LEVEL CONFIG] harbor
+ * Defines the track spline, heightmap, and prop distributions for the Harbor map.
+ * The height function algorithmically drives a flat seafloor, a raised causeway,
+ * and a massive elevated bridge.
+ */
 export const harborLevel = {
   id: "harbor",
   name: "港口巨构",

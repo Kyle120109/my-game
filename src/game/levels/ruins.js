@@ -1,5 +1,10 @@
 import * as THREE from "three";
 
+/**
+ * [LEVEL CONFIG] ruins
+ * Defines the track spline, heightmap, and prop distributions for the Ruins map.
+ * The height function generates overgrown stepped terraces, pyramids, and deep sinkholes.
+ */
 export const ruinsLevel = {
     id: "ruins",
     name: "荒木神庙 (Overgrown Ruins)",

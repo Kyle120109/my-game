@@ -2,8 +2,18 @@
 import { STATE } from "./config.js";
 import { damp, horizontalSpeed } from "./levels.js";
 
-// [MODULE] fx-audio: 粒子特效 + 音频系统。
+/**
+ * Visual effects (particles) and WebAudio synthesizer system.
+ * Handles procedural wind noise, impact sweeps, and beep tones without external sound files.
+ */
 
+/**
+ * Initializes the audio and particle effects context.
+ * Creates an empty audio state which will be 'ensured' (unlocked) upon user interaction.
+ * @param {Object} deps - Dependencies.
+ * @param {Object} deps.settings - Application settings for volume control.
+ * @returns {Object} API for spawning particles and triggering synth events.
+ */
 export function createFxAudioSystem({ settings }) {
   function updateParticles(game, dt) {
     for (let i = game.particles.length - 1; i >= 0; i -= 1) {

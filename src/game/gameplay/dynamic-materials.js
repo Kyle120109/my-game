@@ -1,7 +1,9 @@
 import * as THREE from "three";
 
-// [MODULE] dynamic-materials: Manages the generation of player/AI specific color palettes
-// and handles the procedural generation of dynamic Dirt/Mud masks.
+/**
+ * Manages the generation of player/AI specific color palettes
+ * and handles the procedural generation of dynamic Dirt/Mud masks.
+ */
 
 // Color palettes for differentiation
 export const TEAM_COLORS = {
@@ -21,7 +23,13 @@ export function getAiColor(index) {
     return TEAM_COLORS[keys[index % keys.length]];
 }
 
-// Generates a base procedural dirt mask (returns a Canvas element so we can update it in real-time)
+/**
+ * Generates a base procedural dirt mask buffer.
+ * Returns a Canvas element and context so it can be updated in real-time
+ * as the racer accumulates mud.
+ * @param {number} size - Resolution of the mask.
+ * @returns {Object} Contains the HTMLCanvasElement, CanvasRenderingContext2D, and THREE.CanvasTexture.
+ */
 export function createDynamicDirtMask(size = 512) {
     const canvas = document.createElement("canvas");
     canvas.width = size;
@@ -58,7 +66,15 @@ export function addMudSplatter(ctx, size, amount, intensity = 1.0) {
     }
 }
 
-// Modified material builder that incorporates the dirt mask
+/**
+ * Compiles a comprehensive material suite for a racer character.
+ * Configures distinct cloth, armor, frame, skin, and rubber materials 
+ * tinted to a specific base color.
+ * @param {number} baseColorHex - Base hex color for the team/racer.
+ * @param {boolean} isPlayer - Flag for player-specific overrides.
+ * @param {Object} textures - Precomputed procedural textures map.
+ * @returns {Record<string, THREE.Material>} Dictionary of specialized materials.
+ */
 export function buildAdvancedMaterialSet(baseColorHex, isPlayer, textures) {
     // Use HSL adjustments for a cohesive team look
     const baseColor = new THREE.Color(baseColorHex);
