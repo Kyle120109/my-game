@@ -68,10 +68,8 @@ export function createEntitiesSystem({ modelLibrary }) {
       const profile = isPlayer ? null : AI_PROFILES[Math.floor(Math.random() * AI_PROFILES.length)];
       const racer = createRacer(i, isPlayer, color, profile, botName);
 
-      const slotWidth = 1.8;
-      const totalWidth = (totalCount - 1) * slotWidth;
-      const startOffset = -totalWidth / 2;
-      const lane = startOffset + i * slotWidth;
+      const slotIndex = i === 0 ? 0 : (i % 2 === 1 ? Math.ceil(i / 2) : -Math.ceil(i / 2));
+      const lane = slotIndex * 1.8;
       const rowOffset = -4.2;
 
       const pos = start.clone().addScaledVector(right, lane).addScaledVector(forward, rowOffset);
