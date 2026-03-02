@@ -56,7 +56,7 @@ export function createEntitiesSystem({ modelLibrary }) {
     const heading = Math.atan2(next.x - start.x, next.z - start.z);
     const forward = forwardFromHeading(heading);
     const normal = surfaceNormal(game.activeLevel, start.x, start.z);
-    const right = tempVec3A.crossVectors(normal, forward).normalize();
+    const right = new THREE.Vector3().crossVectors(normal, forward).normalize();
     const checkpointCount = Math.max(1, game.checkpointMeshes?.length ?? game.activeLevel.pathPoints.length);
 
     let aiLaneIndex = 0;
