@@ -83,9 +83,9 @@ export function createEnvironmentBuilder({ modelLibrary, tempVec3A, buildHarborE
       propCreator = (scale, rngLocal) => models[10 + Math.floor(rngLocal() * 10)](scale, rngLocal); // Smoke/Props
     } else if (level.id === "neon") {
       const models = modelLibrary.getNeonModels();
-      treeCreator = (scale, rngLocal) => models[Math.floor(rngLocal() * 5)](scale, rngLocal); // Structures
-      rockCreator = (scale, rngLocal) => models[5 + Math.floor(rngLocal() * 5)](scale, rngLocal); // Ground/Decals
-      propCreator = (scale, rngLocal) => models[10 + Math.floor(rngLocal() * 10)](scale, rngLocal); // Syntax/Props
+      treeCreator = (scale, rngLocal) => models[Math.floor(rngLocal() * 5)](scale, rngLocal); // Structures (0-4)
+      rockCreator = (scale, rngLocal) => models[5 + Math.floor(rngLocal() * 4)](scale, rngLocal); // Ground/Decals (5-8)
+      propCreator = (scale, rngLocal) => models[9 + Math.floor(rngLocal() * 9)](scale, rngLocal); // Syntax/Props (9-17)
     } else if (level.id === "ruins") {
       const models = modelLibrary.getHarborModels();
       treeCreator = (scale, rngLocal) => models[10 + Math.floor(rngLocal() * 5)](scale, rngLocal); // Ruin Pillars/Faces
