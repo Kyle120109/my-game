@@ -96,121 +96,115 @@ export function createWorldSystem({ settings, levels, modelLibrary }) {
    * Excellent for visual inspection of generation algorithms.
    */
   function buildAssetGallery(game) {
-    let zOffset = 20;
-    const spawnX = 15;
+    let spawnX = 0;
 
-    // We do not want them to act as obstacles, so we just add them to decor
-    const addAsset = (model) => {
-      model.position.set(spawnX, 0, zOffset);
-      game.decorRoot.add(model);
-      zOffset += 6;
-    };
-
-    const fns = [
-      ...modelLibrary.getForestModels(),
-      ...modelLibrary.getDesertModels(),
-      ...modelLibrary.getSnowModels(),
-      ...modelLibrary.getCityModels(),
-      ...modelLibrary.getAlpineModels(),
-      ...modelLibrary.getLavaModels(),
-      ...modelLibrary.getNeonModels(),
-      ...modelLibrary.getHarborModels()
+    // 1. Group minor models by environment columns
+    const environments = [
+      modelLibrary.getForestModels(),
+      modelLibrary.getDesertModels(),
+      modelLibrary.getSnowModels(),
+      modelLibrary.getCityModels(),
+      modelLibrary.getAlpineModels(),
+      modelLibrary.getLavaModels(),
+      modelLibrary.getNeonModels(),
+      modelLibrary.getHarborModels()
     ];
 
-    for (const fn of fns) {
-      addAsset(fn(1, () => 0.5));
-    }
+    environments.forEach((envFns) => {
+      let zOffset = 20;
+      for (const fn of envFns) {
+        if (!fn) continue;
+        const model = fn(1, () => 0.5);
+        model.position.set(spawnX, 0, zOffset);
+        game.decorRoot.add(model);
+        zOffset += 15; // Increased spacing
+      }
+      spawnX += 20;
+    });
 
-    // Explicitly add the 4 new core rock models
+    // 2. Core Rocks
     let rockOffset = 20;
     for (let i = 0; i < 4; i++) {
-      // Pass an RNG that returns exactly (i/4), targeting each of the 4 geometry arrays
       const rock = modelLibrary.createRockModel(2.5, i % 2 === 0, () => (i + 0.1) / 4);
-      rock.position.set(spawnX - 10, 0, rockOffset);
+      rock.position.set(-20, 0, rockOffset);
       game.decorRoot.add(rock);
-      rockOffset += 12;
+      rockOffset += 20;
     }
 
-    // Add sample buildings to the debug map
+    // 3. Buildings
     if (modelLibrary.createDetailedBuildingModel) {
       let bldgOffset = 20;
       for (let i = 0; i < 5; i++) {
-        // Pseudo-random generator for consistent debug view
         const rng = () => ((i * 137 + 73) % 100) / 100;
         const bldg = modelLibrary.createDetailedBuildingModel(20, 20, 30 + i * 20, i, rng);
-        bldg.position.set(spawnX + 25, 0, bldgOffset);
+        bldg.position.set(spawnX, 0, bldgOffset);
         game.decorRoot.add(bldg);
-        bldgOffset += 30;
+        bldgOffset += 40;
       }
+      spawnX += 40;
     }
 
-    // Explicitly add massive ships for debug
-    if (modelLibrary.makeCargoShip) {
-      const ships = [
-        modelLibrary.makeCargoShip,
-        modelLibrary.makeCruiseShip,
-        modelLibrary.makeSpeedboat,
-        modelLibrary.makeSailboat,
-        modelLibrary.makeYacht,
-      ];
-      let shipOffset = 20;
-      for (const shipFn of ships) {
-        if (!shipFn) continue;
-        const ship = shipFn(1.2, () => 0.5);
-        ship.position.set(spawnX + 60, 0, shipOffset);
-        game.decorRoot.add(ship);
-        shipOffset += 60; // Give them plenty of space
-      }
-    }
-
-    // Explicitly add massive cranes for debug
-    if (modelLibrary.makeHeavyGantryCrane) {
-      const cranes = [
-        modelLibrary.makeHeavyGantryCrane,
-        modelLibrary.makeTowerCrane,
-      ];
-      let craneOffset = 20;
-      for (const craneFn of cranes) {
-        if (!craneFn) continue;
-        const crane = craneFn(2.5, () => 0.5);
-        crane.position.set(spawnX + 40, 0, craneOffset);
-        game.decorRoot.add(crane);
-        craneOffset += 40;
-      }
-    }
-
-    // Explicitly add construction vehicles for debug
+    // 4. Vehicles
     if (modelLibrary.makeExcavatorA) {
       const vehicles = [
-        modelLibrary.makeExcavatorA,
-        modelLibrary.makeDumpTruck,
-        modelLibrary.makeBulldozer,
-        modelLibrary.makeLargeTruck,
-        modelLibrary.makeCargoTruck,
-        modelLibrary.makeCementMixer,
-        modelLibrary.makeExcavatorB,
-        modelLibrary.makeWorksiteProps,
+        modelLibrary.makeExcavatorA, modelLibrary.makeDumpTruck, modelLibrary.makeBulldozer,
+        modelLibrary.makeLargeTruck, modelLibrary.makeCargoTruck, modelLibrary.makeCementMixer,
+        modelLibrary.makeExcavatorB, modelLibrary.makeWorksiteProps,
       ];
       let vehOffset = 20;
       for (const vehFn of vehicles) {
         if (!vehFn) continue;
         const veh = vehFn(1.2, () => 0.5);
-        veh.position.set(spawnX + 20, 0, vehOffset);
+        veh.position.set(spawnX, 0, vehOffset);
         game.decorRoot.add(veh);
-        vehOffset += 25;
+        vehOffset += 30;
       }
+      spawnX += 30;
     }
 
+    // 5. Cranes
+    if (modelLibrary.makeHeavyGantryCrane) {
+      const cranes = [modelLibrary.makeHeavyGantryCrane, modelLibrary.makeTowerCrane];
+      let craneOffset = 20;
+      for (const craneFn of cranes) {
+        if (!craneFn) continue;
+        const crane = craneFn(2.5, () => 0.5);
+        crane.position.set(spawnX, 0, craneOffset);
+        game.decorRoot.add(crane);
+        craneOffset += 60;
+      }
+      spawnX += 60;
+    }
+
+    // 6. Ships
+    if (modelLibrary.makeCargoShip) {
+      const ships = [
+        modelLibrary.makeCargoShip, modelLibrary.makeCruiseShip, modelLibrary.makeSpeedboat,
+        modelLibrary.makeSailboat, modelLibrary.makeYacht,
+      ];
+      let shipOffset = 20;
+      for (const shipFn of ships) {
+        if (!shipFn) continue;
+        const ship = shipFn(1.2, () => 0.5);
+        ship.position.set(spawnX, 0, shipOffset);
+        game.decorRoot.add(ship);
+        shipOffset += 80;
+      }
+      spawnX += 80;
+    }
+
+    // 7. Pickups and Dummy Racer
+    let miscOffset = 20;
     const pickups = ["turbo", "bash", "shock", "shield", "banana", "bomb", "trap"];
     pickups.forEach(type => {
       const g = modelLibrary.createPickupModel(type);
-      g.position.set(spawnX, 1.5, zOffset);
+      g.position.set(-40, 1.5, miscOffset);
       game.decorRoot.add(g);
-      zOffset += 4;
+      miscOffset += 10;
     });
 
     const dummy = modelLibrary.createRacerModel({ color: 0xff0000, isPlayer: false }).group;
-    dummy.position.set(spawnX, 0.05, zOffset);
+    dummy.position.set(-40, 0.05, miscOffset);
     game.decorRoot.add(dummy);
   }
 
