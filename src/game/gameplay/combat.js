@@ -139,19 +139,23 @@ export function createCombatSystem({ settings, fx, setRaceMessage, tempVec3A }) 
       for (let j = i + 1; j < game.racers.length; j += 1) {
         const b = game.racers[j];
         if (b.respawnTimer > 0) continue;
+
         const dx = a.position.x - b.position.x;
         const dz = a.position.z - b.position.z;
         const distSq = dx * dx + dz * dz;
         const minDist = 1.08;
         if (distSq >= minDist * minDist) continue;
+
         const dist = Math.sqrt(Math.max(0.0001, distSq));
         const nx = dx / dist;
         const nz = dz / dist;
         const overlap = minDist - dist;
+
         a.position.x += nx * overlap * 0.5;
         a.position.z += nz * overlap * 0.5;
         b.position.x -= nx * overlap * 0.5;
         b.position.z -= nz * overlap * 0.5;
+
         const rel = (a.velocity.x - b.velocity.x) * nx + (a.velocity.z - b.velocity.z) * nz;
         if (rel < 0) {
           const impulse = -rel * 0.12;
@@ -159,6 +163,16 @@ export function createCombatSystem({ settings, fx, setRaceMessage, tempVec3A }) 
           a.velocity.z += nz * impulse;
           b.velocity.x -= nx * impulse;
           b.velocity.z -= nz * impulse;
+
+          // Speed-based knockdown logic
+          const speedA = horizontalSpeed(a.velocity) * 3.6;
+          const speedB = horizontalSpeed(b.velocity) * 3.6;
+          const relApproachSpeed = Math.abs(rel * 3.6);
+
+          if (relApproachSpeed >= 30 && (speedA >= 100 || speedB >= 100)) {
+            if (speedA >= 100) applyKnockdown(game, a, tempVec3A.set(nx, 0, nz), 1.0, false);
+            if (speedB >= 100) applyKnockdown(game, b, tempVec3A.set(-nx, 0, -nz), 1.0, false);
+          }
         }
       }
     }

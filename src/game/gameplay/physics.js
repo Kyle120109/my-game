@@ -195,6 +195,11 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
     handleObstacleCollisions(game, racer);
     checkOutBoundsAndFalls(game, racer, isMenu);
 
+    if (racer.isPlayer && input.debugK && racer.knockdownTimer <= 0 && game.state === STATE.RACING) {
+      applyKnockdown(game, racer, tempVec3A.set(1, 0, 0), 1.0, false);
+      input.debugK = false;
+    }
+
     const ground = game.activeLevel.heightFn(racer.position.x, racer.position.z) + BIKE_CLEARANCE;
     const groundGap = racer.position.y - ground;
     const stickRange = racer.grounded ? 1.1 : 0.52;
@@ -347,8 +352,15 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
         if (isEdge) continue;
         const impactPower = Math.abs(hitSpeed) * (obstacle.crashWeight ?? 1.1) * shieldScale;
         const knockdownThreshold = isSoft ? 19 : 15.5;
-        if (impactPower > knockdownThreshold && game.state !== STATE.MENU) {
-          applyKnockdown(game, racer, tempVec3A.set(nx, 0, nz), THREE.MathUtils.clamp(impactPower / 20, 0.6, 1.2), false);
+
+        // Speed-based obstacle knockdown logic
+        const hitSpeedKmh = Math.abs(hitSpeed * 3.6);
+        const absSpeedKmh = horizontalSpeed(racer.velocity) * 3.6;
+
+        if (impactPower > knockdownThreshold || (absSpeedKmh >= 100 && hitSpeedKmh >= 30)) {
+          if (game.state !== STATE.MENU) {
+            applyKnockdown(game, racer, tempVec3A.set(nx, 0, nz), THREE.MathUtils.clamp(impactPower / 20, 0.6, 1.2), false);
+          }
         }
       }
     }

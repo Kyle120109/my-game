@@ -32,6 +32,7 @@ export function createInputState() {
     debugT: false,
     debugY: false,
     debugU: false,
+    debugK: false,
   };
 }
 
@@ -62,6 +63,7 @@ export function clearInputState(input) {
   input.debugT = false;
   input.debugY = false;
   input.debugU = false;
+  input.debugK = false;
 }
 
 /**
@@ -93,6 +95,7 @@ export function bindInput({ input, ensureAudio, getState, ui, openMenu, togglePa
     if (event.code === "KeyT" && !event.repeat) input.debugT = true;
     if (event.code === "KeyY" && !event.repeat) input.debugY = true;
     if (event.code === "KeyU" && !event.repeat) input.debugU = true;
+    if (event.code === "KeyK" && !event.repeat) input.debugK = true;
 
     if (event.code === "Escape" && !event.repeat) {
       const state = getState();

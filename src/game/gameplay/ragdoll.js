@@ -19,6 +19,8 @@ export class RagdollSystem {
         this.nodes = [];
         this.constraints = [];
         this.activeTime = 0;
+        this.style = 0;
+        this.fallSide = 1;
 
         // We only need a few key nodes to simulate a tumbling body
         this.nodeMap = {
@@ -37,6 +39,8 @@ export class RagdollSystem {
         this.activeTime = 0;
         this.nodes = [];
         this.constraints = [];
+        this.style = Math.floor(Math.random() * 4); // 0: flop, 1: rigid, 2: tuck, 3: starfish
+        this.fallSide = Math.random() > 0.5 ? 1 : -1;
 
         // 1. Detach rider from bike visually to simulate falling off
         // Note: In Three.js, to keep global transform we must attach to scene
@@ -67,9 +71,32 @@ export class RagdollSystem {
         this._addConstraint("pelvis", "leftFoot", 0.7);
         this._addConstraint("pelvis", "rightFoot", 0.7);
 
-        // To prevent total collapse, add some cross constraints
-        this._addConstraint("leftHand", "rightHand", 0.5, true); // soft
-        this._addConstraint("leftFoot", "rightFoot", 0.4, true); // soft
+        // Apply style-specific constraints
+        if (this.style === 0) {
+            // Standard flop (soft cross constraints)
+            this._addConstraint("leftHand", "rightHand", 0.5, true);
+            this._addConstraint("leftFoot", "rightFoot", 0.4, true);
+        } else if (this.style === 1) {
+            // Rigid board (straight out, tense body)
+            this._addConstraint("head", "pelvis", 0.7); // Stiffen spine
+            this._addConstraint("leftHand", "leftFoot", 1.2); // Lock arm to leg
+            this._addConstraint("rightHand", "rightFoot", 1.2);
+            this._addConstraint("leftHand", "rightHand", 0.5);
+            this._addConstraint("leftFoot", "rightFoot", 0.5);
+        } else if (this.style === 2) {
+            // Fetal tuck
+            this._addConstraint("head", "pelvis", 0.3); // Curl spine
+            this._addConstraint("head", "leftFoot", 0.4); // Knees to chest
+            this._addConstraint("head", "rightFoot", 0.4);
+            this._addConstraint("torso", "leftHand", 0.3); // Hands pulled in
+            this._addConstraint("torso", "rightHand", 0.3);
+        } else if (this.style === 3) {
+            // Starfish split
+            this._addConstraint("leftHand", "rightHand", 1.2); // Arms spread wide
+            this._addConstraint("leftFoot", "rightFoot", 1.4); // Legs spread wide
+            this._addConstraint("head", "leftHand", 0.8);
+            this._addConstraint("head", "rightHand", 0.8);
+        }
     }
 
     deactivate() {
@@ -91,6 +118,8 @@ export class RagdollSystem {
             if (rig[boneName]) rig[boneName].rotation.set(0, 0, 0);
         }
 
+        this.racer.bikeRoot.rotation.z = 0; // Reset bike tilt
+
         this.nodes = [];
         this.constraints = [];
     }
@@ -104,6 +133,10 @@ export class RagdollSystem {
             this.deactivate();
             return;
         }
+
+        // Animate bike falling over
+        const fallTarget = this.fallSide * (Math.PI / 2.2);
+        this.racer.bikeRoot.rotation.z += (fallTarget - this.racer.bikeRoot.rotation.z) * (1 - Math.exp(-dt * 4));
 
         // 1. Verlet Integration
         for (const node of this.nodes) {
@@ -131,14 +164,20 @@ export class RagdollSystem {
                 const vx = node.pos.x - node.oldPos.x;
                 const vz = node.pos.z - node.oldPos.z;
 
-                node.oldPos.x += vx * 0.2; // 80% friction loss
-                node.oldPos.z += vz * 0.2;
-                node.oldPos.y = node.pos.y + (tempY - node.pos.y) * 0.3; // Small bounce
+                node.oldPos.x += vx * 0.05; // 95% friction loss (stop sliding fast)
+                node.oldPos.z += vz * 0.05;
+
+                // Kill micro-bouncing
+                if (tempY - node.pos.y < -0.3) {
+                    node.oldPos.y = node.pos.y + (tempY - node.pos.y) * 0.2;
+                } else {
+                    node.oldPos.y = node.pos.y;
+                }
             }
         }
 
         // 2. Solve Constraints (Iterate a few times for stability)
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 5; i++) {
             for (const c of this.constraints) {
                 const dx = c.n2.pos.x - c.n1.pos.x;
                 const dy = c.n2.pos.y - c.n1.pos.y;
@@ -173,9 +212,10 @@ export class RagdollSystem {
 
         // Randomize velocity slightly so the body tumbles
         const scatter = 3.0;
+        const styleBiasY = this.style === 2 ? 5.0 : 0.0; // Tuck jumps higher
         const v = initialVelocity.clone().add(new THREE.Vector3(
             (Math.random() - 0.5) * scatter,
-            (Math.random() - 0.1) * scatter, // bias UP slightly
+            (Math.random() - 0.1) * scatter + styleBiasY, // bias UP slightly
             (Math.random() - 0.5) * scatter
         ));
 
@@ -200,21 +240,28 @@ export class RagdollSystem {
         });
     }
 
+    _pointBone(bone, targetPos, localAxisY) {
+        if (!bone || !bone.parent) return;
+        const targetLocal = bone.parent.worldToLocal(targetPos.clone());
+        const dir = targetLocal.sub(bone.position).normalize();
+        const axis = new THREE.Vector3(0, localAxisY, 0);
+        bone.quaternion.setFromUnitVectors(axis, dir);
+    }
+
     _applyToRig() {
-        // For the core root, move it relative to the bike position
-        // In Three.js, if rider is child of alignRoot, we must map world -> local
         const pelvis = this.nodeMap.pelvis;
         const localPelvis = this.racer.alignRoot.worldToLocal(pelvis.pos.clone());
         this.racer.riderRoot.position.copy(localPelvis);
 
-        // Procedural limb twisting based on hand/foot positions relative to torso
-        // This is highly simplified since it's just a visual effect
-        const tPos = this.nodeMap.torso.pos;
-        const lhPos = this.nodeMap.leftHand.pos;
+        // Tilt the base character body so it lies flat on the ground
+        const tiltTarget = this.style % 2 === 0 ? -Math.PI / 2.2 : Math.PI / 2.2;
+        this.racer.riderRoot.rotation.x += (tiltTarget - this.racer.riderRoot.rotation.x) * 0.2;
 
-        // Calculate a rough lookAt vector for the shoulder to point to the hand
-        this.racer.rig.leftShoulder.lookAt(lhPos);
-        this.racer.rig.rightShoulder.lookAt(this.nodeMap.rightHand.pos);
-        this.racer.rig.spinePivot.lookAt(this.nodeMap.head.pos);
+        // Accurately direct limbs (ThreeJS `lookAt` broke limbs due to wrong +Z axis alignment)
+        this._pointBone(this.racer.rig.spinePivot, this.nodeMap.head.pos, 1);
+        this._pointBone(this.racer.rig.leftShoulder, this.nodeMap.leftHand.pos, -1);
+        this._pointBone(this.racer.rig.rightShoulder, this.nodeMap.rightHand.pos, -1);
+        this._pointBone(this.racer.rig.leftHip, this.nodeMap.leftFoot.pos, -1);
+        this._pointBone(this.racer.rig.rightHip, this.nodeMap.rightFoot.pos, -1);
     }
 }
