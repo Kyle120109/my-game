@@ -239,8 +239,9 @@ export function bootstrapGame() {
       uiSystem.setUiLoading(false);
       return;
     }
+    game.pendingRacerCount = THREE.MathUtils.randInt(7, 10);
     world.setupWorld(game, levelId);
-    entities.spawnRacers(game, 7, true);
+    entities.spawnRacers(game, game.pendingRacerCount, true);
     game.state = STATE.MENU;
     game.stateBeforePause = STATE.RACING;
     game.multiplayer.active = false;
@@ -273,15 +274,22 @@ export function bootstrapGame() {
       uiSystem.setUiLoading(false);
       return;
     }
-    world.setupWorld(game, levelId);
-
     const profileName = localStorage.getItem("bike_player_name") || "游客";
-
     const mpStart = window.__BIKE_MP_START__;
     const isMultiplayer = !!(mpStart && mpStart.active);
+
+    let count = 0;
     if (isMultiplayer) {
       const players = Array.isArray(mpStart.players) ? mpStart.players : [];
-      const count = Math.max(2, players.length || 2);
+      count = Math.max(2, players.length || 2);
+    } else {
+      count = THREE.MathUtils.randInt(7, 10);
+    }
+    game.pendingRacerCount = count;
+    world.setupWorld(game, levelId);
+
+    if (isMultiplayer) {
+      const players = Array.isArray(mpStart.players) ? mpStart.players : [];
       entities.spawnRacers(game, count, false);
       game.multiplayer.active = true;
       game.multiplayer.roomId = mpStart.roomId || null;
@@ -309,7 +317,6 @@ export function bootstrapGame() {
         game.multiplayer.remoteRacers[rp.id] = remotes[i];
       }
     } else {
-      const count = THREE.MathUtils.randInt(5, 8);
       entities.spawnRacers(game, count, false);
       if (game.player) game.player.name = profileName;
       game.multiplayer.active = false;

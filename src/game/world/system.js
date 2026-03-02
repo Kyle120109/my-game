@@ -227,7 +227,8 @@ export function createWorldSystem({ settings, levels, modelLibrary }) {
     const woodMat = new THREE.MeshStandardMaterial({ color: 0x5a4a3a, roughness: 0.9 });
 
     const deckDepth = 6;
-    const deckWidth = Math.max(18, level.routeHalfWidth * 2.2);
+    const racerCount = game.pendingRacerCount || 10;
+    const deckWidth = Math.max(12, (racerCount + 2) * 1.8);
     const deck = new THREE.Mesh(new THREE.BoxGeometry(deckWidth, 0.2, deckDepth), woodMat);
     deck.position.set(0, 0.1, -3.5);
     deck.receiveShadow = true;
@@ -275,8 +276,12 @@ export function createWorldSystem({ settings, levels, modelLibrary }) {
     const jointGeom = new THREE.SphereGeometry(0.09, 8, 8);
     pipeGeom.rotateX(Math.PI / 2);
 
-    for (let i = -5; i <= 4; i++) {
-      const px = i * 1.8 + 0.9;
+    for (let i = 0; i <= racerCount; i++) {
+      // For N racers, they take up slots indexed 0, 1, -1, 2, -2 etc.
+      // Max slot index in absolute value is Math.ceil((N-1)/2).
+      // We want poles enveloping this span perfectly.
+      // Leftmost pole: -(racerCount * 1.8) / 2
+      const px = -(racerCount * 1.8) / 2 + i * 1.8;
       const pGroup = new THREE.Group();
 
       const hBar = new THREE.Mesh(pipeGeom, metalMat);
