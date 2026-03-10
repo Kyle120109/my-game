@@ -535,6 +535,67 @@ export function setupRacers(textureSet) {
             bellR.add(finR);
         }
 
+        // --- V3 EXTREME DETAILS ---
+
+        // Intake Vents on top of tanks
+        const ventGeo = new THREE.BoxGeometry(0.12, 0.04, 0.12);
+        const ventL = new THREE.Mesh(ventGeo, mats.darkRubber);
+        ventL.position.set(-0.12, 0.28, 0);
+        const ventR = new THREE.Mesh(ventGeo, mats.darkRubber);
+        ventR.position.set(0.12, 0.28, 0);
+
+        const ventSlitsL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.08), mats.accent);
+        ventL.add(ventSlitsL);
+        const ventSlitsR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.08), mats.accent);
+        ventR.add(ventSlitsR);
+
+        // Physical Fuel Gauge on the left tank
+        const gaugeBase = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.02, 16), mats.darkRubber);
+        gaugeBase.rotation.x = Math.PI / 2;
+        gaugeBase.position.set(-0.16, 0.1, 0.06);
+        gaugeBase.rotation.z = -0.4;
+        const gaugeGlass = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.025, 16), mats.accent);
+        gaugeGlass.rotation.x = Math.PI / 2;
+        gaugeGlass.position.copy(gaugeBase.position);
+        gaugeGlass.rotation.copy(gaugeBase.rotation);
+
+        // Micro-steering thrusters on the outer sides
+        const microGeo = new THREE.CylinderGeometry(0.02, 0.015, 0.06, 8);
+        const microL = new THREE.Mesh(microGeo, mats.chrome);
+        microL.rotation.z = Math.PI / 2;
+        microL.position.set(-0.25, 0, 0);
+        const microR = new THREE.Mesh(microGeo, mats.chrome);
+        microR.rotation.z = -Math.PI / 2;
+        microR.position.set(0.25, 0, 0);
+
+        // Metal rivets lining the tanks
+        const rivetGeo = new THREE.SphereGeometry(0.008, 4, 4);
+        for (let j = 0; j < 8; j++) {
+            const yLine = -0.15 + (j * 0.04);
+            // Left tank rivets out front
+            const rivetL = new THREE.Mesh(rivetGeo, mats.darkRubber);
+            rivetL.position.set(-0.12, yLine, 0.08);
+            // Right tank rivets out front
+            const rivetR = new THREE.Mesh(rivetGeo, mats.darkRubber);
+            rivetR.position.set(0.12, yLine, 0.08);
+            jetpackPivot.add(rivetL, rivetR);
+        }
+
+        // Harness attachment straps crossing over back/shoulders
+        const strapGeo = new THREE.BoxGeometry(0.04, 0.45, 0.02);
+        const strapL = new THREE.Mesh(strapGeo, mats.cloth);
+        strapL.position.set(-0.08, 0.1, -0.06);
+        strapL.rotation.z = -0.2;
+        strapL.rotation.x = -0.3;
+        const strapR = new THREE.Mesh(strapGeo, mats.cloth);
+        strapR.position.set(0.08, 0.1, -0.06);
+        strapR.rotation.z = 0.2;
+        strapR.rotation.x = -0.3;
+
+        const beltGeo = new THREE.BoxGeometry(0.28, 0.06, 0.02);
+        const waistBelt = new THREE.Mesh(beltGeo, mats.cloth);
+        waistBelt.position.set(0, -0.1, -0.12);
+
         // External Wings/Fins
         const finShape = new THREE.Shape();
         finShape.moveTo(0, 0);
@@ -558,6 +619,7 @@ export function setupRacers(textureSet) {
         bellR.add(jetpackNozzleR);
 
         jetpackPivot.add(mainTankL, mainTankR, jetpackCore, pipe1, pipe2, boosterPivotL, boosterPivotR, mainFinL, mainFinR);
+        jetpackPivot.add(ventL, ventR, gaugeBase, gaugeGlass, microL, microR, strapL, strapR, waistBelt);
         upperSpinePivot.add(upperTorso, chestPlate, chestCore, backPlate, jetpackPivot);
 
         const lowerNeckPivot = new THREE.Group();

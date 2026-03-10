@@ -26,17 +26,43 @@ export function createFxAudioSystem({ settings }) {
             racer.rig.jetpackNozzleL.getWorldPosition(nL);
             racer.rig.jetpackNozzleR.getWorldPosition(nR);
 
-            if (Math.random() < 0.8) spawnBurst(game, nL, 0x00d4ff, 2, 0.08, 0.5);
-            if (Math.random() < 0.8) spawnBurst(game, nR, 0x00d4ff, 2, 0.08, 0.5);
-            if (Math.random() < 0.5) spawnBurst(game, nL, 0x88bbff, 2, 0.04, 0.8);
-            if (Math.random() < 0.5) spawnBurst(game, nR, 0x88bbff, 2, 0.04, 0.8);
-            if (Math.random() < 0.3) spawnBurst(game, nL, 0xeef9ff, 1, 0.02, 1.2);
-            if (Math.random() < 0.3) spawnBurst(game, nR, 0xeef9ff, 1, 0.02, 1.2);
+            // We want particles to fire *backwards* opposite to racer's heading
+            const throwForward = new THREE.Vector3(Math.sin(racer.heading), 0, Math.cos(racer.heading));
+            // Add air pitch for Y thrust
+            throwForward.y = Math.sin(-racer.airPitch);
+            const hz = Math.cos(-racer.airPitch);
+            throwForward.x *= hz;
+            throwForward.z *= hz;
+            throwForward.normalize();
 
-            if (game.audio && game.audio.ctx && Math.random() < 0.4) {
+            // Blast the particles backwards at high speed
+            const bSpd = -18.0;
+            const bSpr = 1.0;
+
+            const emitJet = (pos, color, scale, ls) => {
+              for (let i = 0; i < scale; i++) {
+                const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.08 + Math.random() * 0.1, 8, 8), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }));
+                mesh.position.copy(pos).add(new THREE.Vector3((Math.random() - 0.5) * bSpr, (Math.random() - 0.5) * bSpr, (Math.random() - 0.5) * bSpr));
+                const vel = new THREE.Vector3(throwForward.x * bSpd + (Math.random() - 0.5) * 2, throwForward.y * bSpd + (Math.random() - 0.5) * 2, throwForward.z * bSpd + (Math.random() - 0.5) * 2);
+                game.fxRoot.add(mesh);
+                game.particles.push({ mesh, vel, life: ls * (0.6 + Math.random() * 0.4), maxLife: ls, jetpack: true });
+              }
+            };
+
+            if (Math.random() < 0.9) emitJet(nL, 0x00d4ff, 3, 0.4);
+            if (Math.random() < 0.9) emitJet(nR, 0x00d4ff, 3, 0.4);
+            if (Math.random() < 0.6) emitJet(nL, 0x88bbff, 2, 0.5);
+            if (Math.random() < 0.6) emitJet(nR, 0x88bbff, 2, 0.5);
+            if (Math.random() < 0.4) emitJet(nL, 0xffffff, 1, 0.6);
+            if (Math.random() < 0.4) emitJet(nR, 0xffffff, 1, 0.6);
+
+            if (game.audio && game.audio.ctx && Math.random() < 0.3) {
               const now = game.audio.ctx.currentTime;
-              if (!racer.lastJetSound || now - racer.lastJetSound > 0.06) {
-                playTone(game, 120 + Math.random() * 80, 0.1, 0.15, "sawtooth");
+              if (!racer.lastJetSound || now - racer.lastJetSound > 0.08) {
+                // deep aggressive bass roar
+                playSweep(game, 150 + Math.random() * 50, 40, 0.12, 0.28, "sawtooth");
+                // high pitched turbine whine layer
+                if (Math.random() < 0.4) playTone(game, 1800 + Math.random() * 400, 0.1, 0.08, "square");
                 racer.lastJetSound = now;
               }
             }
@@ -54,9 +80,17 @@ export function createFxAudioSystem({ settings }) {
         continue;
       }
 
-      p.vel.y -= 8.4 * dt;
+      if (!p.jetpack) p.vel.y -= 8.4 * dt; // Gravity for normal particles, jetpack particles shoot straight
       p.mesh.position.addScaledVector(p.vel, dt);
-      p.mesh.material.opacity = p.life / p.maxLife;
+
+      if (p.jetpack) {
+        // Expand and fade fast
+        const scale = 1.0 + (1.0 - p.life / p.maxLife) * 2.5;
+        p.mesh.scale.set(scale, scale, scale);
+        p.mesh.material.opacity = Math.pow(p.life / p.maxLife, 1.5);
+      } else {
+        p.mesh.material.opacity = p.life / p.maxLife;
+      }
     }
   }
 

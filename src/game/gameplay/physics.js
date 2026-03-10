@@ -168,7 +168,7 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
       const fuelConsumeRate = 25.0; // 4 seconds of fuel from 100
       racer.jetpackFuel = Math.max(0, racer.jetpackFuel - fuelConsumeRate * dt);
 
-      const jetpackForce = 38.0;
+      const jetpackForce = 50.0; // Violent push
       let jetForward = forwardFromHeading(racer.heading);
 
       if (racer.grounded) {
@@ -182,8 +182,13 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
         jetForward.copy(tempVec3D).normalize();
       }
 
-      accel.addScaledVector(jetForward, jetpackForce);
-      racer.boostTimer = Math.max(racer.boostTimer, 0.2);
+      // Instead of just calculating acceleration, we violently force velocity
+      // up to a much higher limit to give the "Nitro" feel
+      racer.velocity.addScaledVector(jetForward, jetpackForce * dt * (racer.grounded ? 1.5 : 0.8));
+
+      // Keep a small acceleration for physics solver stability
+      accel.addScaledVector(jetForward, jetpackForce * 0.2);
+      racer.boostTimer = Math.max(racer.boostTimer, 0.4); // Forces FOV/Blur effects
     } else if (racer.isPlayer && (!input.jetpackActive || racer.jetpackFuel <= 0) && game.state === STATE.RACING) {
       const fuelRechargeRate = 12.0;
       racer.jetpackFuel = Math.min(racer.jetpackMaxFuel, racer.jetpackFuel + fuelRechargeRate * dt);
@@ -207,7 +212,13 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
     }
 
     const horiz = tempVec3C.set(racer.velocity.x, 0, racer.velocity.z);
-    const maxSpeed = (racer.grounded ? racer.baseTopSpeed : racer.baseTopSpeed + PHYSICS.airTopSpeedBonus) * (racer.boostTimer > 0 ? PHYSICS.boostTopSpeedScale : 1);
+
+    // Significantly raise top speed limit when using jetpack
+    const isUsingJetpack = racer.isPlayer && input.jetpackActive && racer.jetpackFuel > 0;
+    const jetpackMaxScalar = isUsingJetpack ? 1.6 : 1.0;
+
+    const maxSpeed = (racer.grounded ? racer.baseTopSpeed : racer.baseTopSpeed + PHYSICS.airTopSpeedBonus) * (racer.boostTimer > 0 ? PHYSICS.boostTopSpeedScale : 1) * jetpackMaxScalar;
+
     if (horiz.length() > maxSpeed) {
       horiz.setLength(maxSpeed);
       racer.velocity.x = horiz.x;
