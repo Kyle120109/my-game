@@ -41,33 +41,35 @@ export function createFxAudioSystem({ settings }) {
             throwForward.normalize();
 
             // Blast the particles backwards at high speed
-            const bSpd = -18.0;
-            const bSpr = 1.0;
+            const bSpd = -22.0;
+            const bSpr = 0.15; // Much tighter spread for a focused jet flame
 
             const emitJet = (pos, color, scale, ls) => {
               for (let i = 0; i < scale; i++) {
-                const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.08 + Math.random() * 0.1, 8, 8), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }));
+                const size = 0.05 + Math.random() * 0.05;
+                const mesh = new THREE.Mesh(new THREE.SphereGeometry(size, 8, 8), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }));
                 mesh.position.copy(pos).add(new THREE.Vector3((Math.random() - 0.5) * bSpr, (Math.random() - 0.5) * bSpr, (Math.random() - 0.5) * bSpr));
-                const vel = new THREE.Vector3(throwForward.x * bSpd + (Math.random() - 0.5) * 2, throwForward.y * bSpd + (Math.random() - 0.5) * 2, throwForward.z * bSpd + (Math.random() - 0.5) * 2);
+
+                // Tight directional velocity
+                const vel = new THREE.Vector3(throwForward.x * bSpd + (Math.random() - 0.5), throwForward.y * bSpd + (Math.random() - 0.5), throwForward.z * bSpd + (Math.random() - 0.5));
                 game.fxRoot.add(mesh);
-                game.particles.push({ mesh, vel, life: ls * (0.6 + Math.random() * 0.4), maxLife: ls, jetpack: true });
+                game.particles.push({ mesh, vel, life: ls * (0.5 + Math.random() * 0.5), maxLife: ls, jetpack: true, initialSize: size });
               }
             };
 
-            if (Math.random() < 0.9) emitJet(nL, 0x00d4ff, 3, 0.4);
-            if (Math.random() < 0.9) emitJet(nR, 0x00d4ff, 3, 0.4);
-            if (Math.random() < 0.6) emitJet(nL, 0x88bbff, 2, 0.5);
-            if (Math.random() < 0.6) emitJet(nR, 0x88bbff, 2, 0.5);
-            if (Math.random() < 0.4) emitJet(nL, 0xffffff, 1, 0.6);
-            if (Math.random() < 0.4) emitJet(nR, 0xffffff, 1, 0.6);
+            // White/cyan core, blue outer
+            if (Math.random() < 0.9) emitJet(nL, 0xffffff, 2, 0.15);
+            if (Math.random() < 0.9) emitJet(nR, 0xffffff, 2, 0.15);
+            if (Math.random() < 0.7) emitJet(nL, 0x00ffff, 4, 0.25);
+            if (Math.random() < 0.7) emitJet(nR, 0x00ffff, 4, 0.25);
+            if (Math.random() < 0.5) emitJet(nL, 0x0055ff, 3, 0.4);
+            if (Math.random() < 0.5) emitJet(nR, 0x0055ff, 3, 0.4);
 
-            if (game.audio && game.audio.ctx && Math.random() < 0.3) {
+            if (game.audio && game.audio.ctx) {
               const now = game.audio.ctx.currentTime;
-              if (!racer.lastJetSound || now - racer.lastJetSound > 0.08) {
-                // deep aggressive bass roar
-                playSweep(game, 150 + Math.random() * 50, 40, 0.12, 0.28, "sawtooth");
-                // high pitched turbine whine layer
-                if (Math.random() < 0.4) playTone(game, 1800 + Math.random() * 400, 0.1, 0.08, "square");
+              if (!racer.lastJetSound || now - racer.lastJetSound > 0.04) {
+                // Trigger a continuous noise rush (we use the turbo impact as a roaring loop)
+                playUseTurboSound(game);
                 racer.lastJetSound = now;
               }
             }

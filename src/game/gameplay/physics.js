@@ -171,7 +171,7 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
     }
 
     if (racer.isPlayer && racer.jetpackActive) {
-      const fuelConsumeRate = 25.0; // 4 seconds of fuel from 100
+      const fuelConsumeRate = 50.0; // 2 seconds of fuel from 100
       racer.jetpackFuel = Math.max(0, racer.jetpackFuel - fuelConsumeRate * dt);
 
       const jetpackForce = 50.0; // Violent push
