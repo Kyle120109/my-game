@@ -184,6 +184,9 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
 
       accel.addScaledVector(jetForward, jetpackForce);
       racer.boostTimer = Math.max(racer.boostTimer, 0.2);
+    } else if (racer.isPlayer && (!input.jetpackActive || racer.jetpackFuel <= 0) && game.state === STATE.RACING) {
+      const fuelRechargeRate = 12.0;
+      racer.jetpackFuel = Math.min(racer.jetpackMaxFuel, racer.jetpackFuel + fuelRechargeRate * dt);
     }
 
     racer.velocity.addScaledVector(accel, dt);

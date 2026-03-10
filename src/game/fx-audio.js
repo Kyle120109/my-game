@@ -26,10 +26,12 @@ export function createFxAudioSystem({ settings }) {
             racer.rig.jetpackNozzleL.getWorldPosition(nL);
             racer.rig.jetpackNozzleR.getWorldPosition(nR);
 
-            if (Math.random() < 0.6) spawnBurst(game, nL, 0xff8800, 1, 0.05, 0.3);
-            if (Math.random() < 0.6) spawnBurst(game, nR, 0xff8800, 1, 0.05, 0.3);
-            if (Math.random() < 0.3) spawnBurst(game, nL, 0xffeeaa, 1, 0.02, 0.6);
-            if (Math.random() < 0.3) spawnBurst(game, nR, 0xffeeaa, 1, 0.02, 0.6);
+            if (Math.random() < 0.8) spawnBurst(game, nL, 0x00d4ff, 2, 0.08, 0.5);
+            if (Math.random() < 0.8) spawnBurst(game, nR, 0x00d4ff, 2, 0.08, 0.5);
+            if (Math.random() < 0.5) spawnBurst(game, nL, 0x88bbff, 2, 0.04, 0.8);
+            if (Math.random() < 0.5) spawnBurst(game, nR, 0x88bbff, 2, 0.04, 0.8);
+            if (Math.random() < 0.3) spawnBurst(game, nL, 0xeef9ff, 1, 0.02, 1.2);
+            if (Math.random() < 0.3) spawnBurst(game, nR, 0xeef9ff, 1, 0.02, 1.2);
 
             if (game.audio && game.audio.ctx && Math.random() < 0.4) {
               const now = game.audio.ctx.currentTime;

@@ -452,62 +452,112 @@ export function setupRacers(textureSet) {
         const backPlate = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.3, 0.08), mats.accent);
         backPlate.position.set(0, 0.15, -0.12);
 
-        // Jetpack Model
+        // --- DETAILED JETPACK MODEL ---
         const jetpackPivot = new THREE.Group();
         jetpackPivot.position.set(0, 0.15, -0.18);
 
-        // Main Fuel Tank
-        const tankGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.35, 16);
-        const tankMat = mats.chrome;
-        const mainTank = new THREE.Mesh(tankGeo, tankMat);
-        mainTank.rotation.x = 0; // Upright
+        // Main Fuel Tanks (Dual Cylinders)
+        const tankGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.45, 24);
+        const tankCapGeo = new THREE.SphereGeometry(0.08, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2);
 
-        // Side Boosters
-        const boosterGeo = new THREE.CylinderGeometry(0.06, 0.08, 0.28, 16);
-        const boosterMat = mats.darkRubber;
-        const boosterL = new THREE.Mesh(boosterGeo, boosterMat);
-        boosterL.position.set(-0.16, -0.05, 0);
-        const boosterR = new THREE.Mesh(boosterGeo, boosterMat);
-        boosterR.position.set(0.16, -0.05, 0);
+        const mainTankL = new THREE.Mesh(tankGeo, mats.chrome);
+        mainTankL.position.set(-0.12, 0, 0);
+        const capTopL = new THREE.Mesh(tankCapGeo, mats.accent);
+        capTopL.position.y = 0.225;
+        const capBotL = new THREE.Mesh(tankCapGeo, mats.accent);
+        capBotL.rotation.x = Math.PI;
+        capBotL.position.y = -0.225;
+        mainTankL.add(capTopL, capBotL);
 
-        // Booster Nozzles
-        const nozzleGeo = new THREE.CylinderGeometry(0.05, 0.03, 0.1, 16);
-        const nozzleMat = mats.accent;
-        const nozzleL = new THREE.Mesh(nozzleGeo, nozzleMat);
-        nozzleL.position.set(0, -0.16, 0);
-        const nozzleR = new THREE.Mesh(nozzleGeo, nozzleMat);
-        nozzleR.position.set(0, -0.16, 0);
-        boosterL.add(nozzleL);
-        boosterR.add(nozzleR);
+        const mainTankR = new THREE.Mesh(tankGeo, mats.chrome);
+        mainTankR.position.set(0.12, 0, 0);
+        const capTopR = new THREE.Mesh(tankCapGeo, mats.accent);
+        capTopR.position.y = 0.225;
+        const capBotR = new THREE.Mesh(tankCapGeo, mats.accent);
+        capBotR.rotation.x = Math.PI;
+        capBotR.position.y = -0.225;
+        mainTankR.add(capTopR, capBotR);
+
+        // Central Reactor Core
+        const coreGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.25, 16);
+        const jetpackCore = new THREE.Mesh(coreGeo, mats.darkRubber);
+        jetpackCore.rotation.x = Math.PI / 2;
+        jetpackCore.position.set(0, 0, 0.06);
+
+        // Glowing Core Ring
+        const coreRing = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.015, 16, 32), mats.accent);
+        jetpackCore.add(coreRing);
+
+        // Connecting Pipes
+        const pipeGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.15, 8);
+        const pipe1 = new THREE.Mesh(pipeGeo, mats.chrome);
+        pipe1.rotation.z = Math.PI / 2;
+        pipe1.position.set(0, 0.1, 0);
+        const pipe2 = new THREE.Mesh(pipeGeo, mats.chrome);
+        pipe2.rotation.z = Math.PI / 2;
+        pipe2.position.set(0, -0.1, 0);
+
+        // Complex Thruster Assemblies
+        const boosterPivotL = new THREE.Group();
+        boosterPivotL.position.set(-0.12, -0.25, 0);
+        const boosterPivotR = new THREE.Group();
+        boosterPivotR.position.set(0.12, -0.25, 0);
+
+        // Thruster Bells
+        const bellGeo = new THREE.CylinderGeometry(0.04, 0.09, 0.18, 20, 1, true);
+        const bellInsideGeo = new THREE.CylinderGeometry(0.038, 0.088, 0.18, 20, 1, true);
+        // glowing inside
+        const bellInsideMat = new THREE.MeshBasicMaterial({ color: 0x00aaff, side: THREE.BackSide, transparent: true, opacity: 0.8 });
+
+        const bellL = new THREE.Mesh(bellGeo, mats.darkRubber);
+        const bellInL = new THREE.Mesh(bellInsideGeo, bellInsideMat);
+        bellL.add(bellInL);
+        bellL.position.y = -0.09;
+        boosterPivotL.add(bellL);
+
+        const bellR = new THREE.Mesh(bellGeo, mats.darkRubber);
+        const bellInR = new THREE.Mesh(bellInsideGeo, bellInsideMat);
+        bellR.add(bellInR);
+        bellR.position.y = -0.09;
+        boosterPivotR.add(bellR);
+
+        // Heat Dissipation Fins on Bells
+        const heatFinGeo = new THREE.BoxGeometry(0.01, 0.12, 0.04);
+        for (let i = 0; i < 4; i++) {
+            const finL = new THREE.Mesh(heatFinGeo, mats.accent);
+            finL.position.set(Math.cos(i * Math.PI / 2) * 0.06, 0, Math.sin(i * Math.PI / 2) * 0.06);
+            finL.rotation.y = -i * Math.PI / 2;
+            bellL.add(finL);
+
+            const finR = new THREE.Mesh(heatFinGeo, mats.accent);
+            finR.position.set(Math.cos(i * Math.PI / 2) * 0.06, 0, Math.sin(i * Math.PI / 2) * 0.06);
+            finR.rotation.y = -i * Math.PI / 2;
+            bellR.add(finR);
+        }
+
+        // External Wings/Fins
+        const finShape = new THREE.Shape();
+        finShape.moveTo(0, 0);
+        finShape.lineTo(0.2, -0.05);
+        finShape.lineTo(0.2, -0.25);
+        finShape.lineTo(0, -0.1);
+        const finGeo = new THREE.ExtrudeGeometry(finShape, { depth: 0.02, bevelEnabled: true, bevelSize: 0.005 });
+        finGeo.center();
+        const mainFinL = new THREE.Mesh(finGeo, mats.accent);
+        mainFinL.position.set(-0.25, 0, 0);
+        const mainFinR = new THREE.Mesh(finGeo, mats.accent);
+        mainFinR.rotation.y = Math.PI;
+        mainFinR.position.set(0.25, 0, 0);
 
         // Nozzle targets for particle emission
         const jetpackNozzleL = new THREE.Group();
-        jetpackNozzleL.position.set(0, -0.05, 0);
-        nozzleL.add(jetpackNozzleL);
+        jetpackNozzleL.position.set(0, -0.09, 0);
+        bellL.add(jetpackNozzleL);
         const jetpackNozzleR = new THREE.Group();
-        jetpackNozzleR.position.set(0, -0.05, 0);
-        nozzleR.add(jetpackNozzleR);
+        jetpackNozzleR.position.set(0, -0.09, 0);
+        bellR.add(jetpackNozzleR);
 
-        // Center Core Details
-        const coreDetailGeo = new THREE.BoxGeometry(0.15, 0.2, 0.15);
-        const jetpackCore = new THREE.Mesh(coreDetailGeo, mats.accent);
-        jetpackCore.position.set(0, 0, 0.08); // Sticks out
-
-        // Wings/Fins
-        const finShape = new THREE.Shape();
-        finShape.moveTo(0, 0);
-        finShape.lineTo(0.15, -0.1);
-        finShape.lineTo(0.15, -0.2);
-        finShape.lineTo(0, -0.05);
-        const finGeo = new THREE.ExtrudeGeometry(finShape, { depth: 0.02, bevelEnabled: true, bevelSize: 0.005 });
-        finGeo.center();
-        const finL = new THREE.Mesh(finGeo, mats.accent);
-        finL.position.set(-0.24, -0.05, 0);
-        const finR = new THREE.Mesh(finGeo, mats.accent);
-        finR.rotation.y = Math.PI;
-        finR.position.set(0.24, -0.05, 0);
-
-        jetpackPivot.add(mainTank, boosterL, boosterR, jetpackCore, finL, finR);
+        jetpackPivot.add(mainTankL, mainTankR, jetpackCore, pipe1, pipe2, boosterPivotL, boosterPivotR, mainFinL, mainFinR);
         upperSpinePivot.add(upperTorso, chestPlate, chestCore, backPlate, jetpackPivot);
 
         const lowerNeckPivot = new THREE.Group();
