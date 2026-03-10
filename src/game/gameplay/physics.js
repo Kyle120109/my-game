@@ -164,7 +164,13 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
     }
 
     // --- JETPACK BOOST MECHANICS ---
-    if (racer.isPlayer && input.jetpackActive && racer.jetpackFuel > 0 && game.state === STATE.RACING) {
+    if (racer.isPlayer && game.state === STATE.RACING) {
+      racer.jetpackActive = input.jetpackActive && racer.jetpackFuel > 0;
+    } else {
+      racer.jetpackActive = false;
+    }
+
+    if (racer.isPlayer && racer.jetpackActive) {
       const fuelConsumeRate = 25.0; // 4 seconds of fuel from 100
       racer.jetpackFuel = Math.max(0, racer.jetpackFuel - fuelConsumeRate * dt);
 

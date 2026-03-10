@@ -16,9 +16,14 @@ import { damp, horizontalSpeed } from "./levels.js";
  */
 export function createFxAudioSystem({ settings }) {
   function updateParticles(game, dt) {
-    // --- JETPACK CONTINUOUS EMISSION ---
+    // --- JETPACK CONTINUOUS EMISSION & GLOW ---
     if (game.state === STATE.RACING && game.racers) {
       for (const racer of game.racers) {
+        if (racer.rig && racer.rig.jetpackGlowMat) {
+          const targetOpacity = (racer.jetpackActive && racer.jetpackFuel > 0) ? 0.9 : 0.0;
+          racer.rig.jetpackGlowMat.opacity = THREE.MathUtils.lerp(racer.rig.jetpackGlowMat.opacity, targetOpacity, dt * 10);
+        }
+
         if (racer.jetpackFuel > 0 && racer.jetpackActive && racer.isPlayer) {
           const nL = new THREE.Vector3();
           const nR = new THREE.Vector3();

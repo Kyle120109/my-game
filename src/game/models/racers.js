@@ -506,8 +506,8 @@ export function setupRacers(textureSet) {
         // Thruster Bells
         const bellGeo = new THREE.CylinderGeometry(0.04, 0.09, 0.18, 20, 1, true);
         const bellInsideGeo = new THREE.CylinderGeometry(0.038, 0.088, 0.18, 20, 1, true);
-        // glowing inside
-        const bellInsideMat = new THREE.MeshBasicMaterial({ color: 0x00aaff, side: THREE.BackSide, transparent: true, opacity: 0.8 });
+        // glowing inside, starts invisible
+        const bellInsideMat = new THREE.MeshBasicMaterial({ color: 0x00aaff, side: THREE.BackSide, transparent: true, opacity: 0.0 });
 
         const bellL = new THREE.Mesh(bellGeo, mats.darkRubber);
         const bellInL = new THREE.Mesh(bellInsideGeo, bellInsideMat);
@@ -817,6 +817,7 @@ export function setupRacers(textureSet) {
                 visorPivot,
                 jetpackNozzleL,
                 jetpackNozzleR,
+                jetpackGlowMat: bellInsideMat,
 
                 leftShoulder: leftArm.shoulderPivot,
                 leftElbow: leftArm.elbowPivot,
