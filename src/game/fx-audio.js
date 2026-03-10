@@ -40,13 +40,14 @@ export function createFxAudioSystem({ settings }) {
             throwForward.z *= hz;
             throwForward.normalize();
 
-            // Blast the particles backwards at high speed
-            const bSpd = -22.0;
-            const bSpr = 0.15; // Much tighter spread for a focused jet flame
+            // Blast the particles backwards at extremely high speed to stretch the flame
+            const bSpd = -30.0;
+            const bSpr = 0.08; // Ultra-tight spread
 
             const emitJet = (pos, color, scale, ls) => {
               for (let i = 0; i < scale; i++) {
-                const size = 0.08 + Math.random() * 0.06;
+                // VERY small radius so the two thruster streams do not overlap
+                const size = 0.025 + Math.random() * 0.02;
                 const mat = new THREE.MeshBasicMaterial({
                   color,
                   transparent: true,
