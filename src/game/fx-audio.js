@@ -16,6 +16,33 @@ import { damp, horizontalSpeed } from "./levels.js";
  */
 export function createFxAudioSystem({ settings }) {
   function updateParticles(game, dt) {
+    // --- JETPACK CONTINUOUS EMISSION ---
+    if (game.state === STATE.RACING && game.racers) {
+      for (const racer of game.racers) {
+        if (racer.jetpackFuel > 0 && racer.jetpackActive && racer.isPlayer) {
+          const nL = new THREE.Vector3();
+          const nR = new THREE.Vector3();
+          if (racer.rig.jetpackNozzleL && racer.rig.jetpackNozzleR) {
+            racer.rig.jetpackNozzleL.getWorldPosition(nL);
+            racer.rig.jetpackNozzleR.getWorldPosition(nR);
+
+            if (Math.random() < 0.6) spawnBurst(game, nL, 0xff8800, 1, 0.05, 0.3);
+            if (Math.random() < 0.6) spawnBurst(game, nR, 0xff8800, 1, 0.05, 0.3);
+            if (Math.random() < 0.3) spawnBurst(game, nL, 0xffeeaa, 1, 0.02, 0.6);
+            if (Math.random() < 0.3) spawnBurst(game, nR, 0xffeeaa, 1, 0.02, 0.6);
+
+            if (game.audio && game.audio.ctx && Math.random() < 0.4) {
+              const now = game.audio.ctx.currentTime;
+              if (!racer.lastJetSound || now - racer.lastJetSound > 0.06) {
+                playTone(game, 120 + Math.random() * 80, 0.1, 0.15, "sawtooth");
+                racer.lastJetSound = now;
+              }
+            }
+          }
+        }
+      }
+    }
+
     for (let i = game.particles.length - 1; i >= 0; i -= 1) {
       const p = game.particles[i];
       p.life -= dt;

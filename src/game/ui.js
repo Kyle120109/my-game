@@ -132,6 +132,7 @@ export function collectUi() {
     raceTime: document.getElementById("race-time"),
     countdown: document.getElementById("countdown"),
     raceMessage: document.getElementById("race-message"),
+    fuelBarFill: document.getElementById("fuel-bar-fill"),
     menuBtn: document.getElementById("menu-btn"),
     pauseScreen: document.getElementById("pause-screen"),
     pauseResumeBtn: document.getElementById("pause-resume-btn"),
@@ -1120,6 +1121,12 @@ export function createUiSystem({ settings, levels, getSelectedLevelId, setSelect
 
     const speedKmh = Math.round(Math.hypot(game.player.velocity.x, game.player.velocity.z) * 3.6);
     ui.speed.textContent = String(speedKmh);
+
+    if (ui.fuelBarFill) {
+      const fuelPct = Math.max(0, Math.min(100, (game.player.jetpackFuel / game.player.jetpackMaxFuel) * 100));
+      ui.fuelBarFill.style.width = `${fuelPct}%`;
+      ui.fuelBarFill.style.background = fuelPct > 20 ? "#ffaa00" : "#ff0000";
+    }
 
     const ranking = getRaceOrder();
     ui.rank.textContent = `${Math.max(1, ranking.findIndex((entry) => entry === game.player) + 1)}/${game.racers.length}`;

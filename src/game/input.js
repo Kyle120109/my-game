@@ -17,6 +17,7 @@ export function createInputState() {
     right: false,
     punchQueued: false,
     itemQueued: false,
+    jetpackActive: false,
     respawnQueued: false,
     debugF4: false,
     debug1: false,
@@ -48,6 +49,7 @@ export function clearInputState(input) {
   input.right = false;
   input.punchQueued = false;
   input.itemQueued = false;
+  input.jetpackActive = false;
   input.respawnQueued = false;
   input.debugF4 = false;
   input.debug1 = false;
@@ -78,6 +80,7 @@ export function bindInput({ input, ensureAudio, getState, ui, openMenu, togglePa
     if (event.code === "KeyS" || event.code === "ArrowDown") input.brake = true;
     if (event.code === "KeyA" || event.code === "ArrowLeft") input.left = true;
     if (event.code === "KeyD" || event.code === "ArrowRight") input.right = true;
+    if (event.code === "ShiftLeft" || event.code === "ShiftRight") input.jetpackActive = true;
     if (event.code === "KeyF" && !event.repeat) input.punchQueued = true;
     if (event.code === "KeyQ" && !event.repeat) input.itemQueued = true;
     if (event.code === "KeyR" && !event.repeat) input.respawnQueued = true;
@@ -114,5 +117,6 @@ export function bindInput({ input, ensureAudio, getState, ui, openMenu, togglePa
     if (event.code === "KeyS" || event.code === "ArrowDown") input.brake = false;
     if (event.code === "KeyA" || event.code === "ArrowLeft") input.left = false;
     if (event.code === "KeyD" || event.code === "ArrowRight") input.right = false;
+    if (event.code === "ShiftLeft" || event.code === "ShiftRight") input.jetpackActive = false;
   });
 }

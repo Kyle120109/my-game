@@ -451,7 +451,64 @@ export function setupRacers(textureSet) {
         chestCore.position.set(0, 0.15, 0.18);
         const backPlate = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.3, 0.08), mats.accent);
         backPlate.position.set(0, 0.15, -0.12);
-        upperSpinePivot.add(upperTorso, chestPlate, chestCore, backPlate);
+
+        // Jetpack Model
+        const jetpackPivot = new THREE.Group();
+        jetpackPivot.position.set(0, 0.15, -0.18);
+
+        // Main Fuel Tank
+        const tankGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.35, 16);
+        const tankMat = mats.chrome;
+        const mainTank = new THREE.Mesh(tankGeo, tankMat);
+        mainTank.rotation.x = 0; // Upright
+
+        // Side Boosters
+        const boosterGeo = new THREE.CylinderGeometry(0.06, 0.08, 0.28, 16);
+        const boosterMat = mats.darkRubber;
+        const boosterL = new THREE.Mesh(boosterGeo, boosterMat);
+        boosterL.position.set(-0.16, -0.05, 0);
+        const boosterR = new THREE.Mesh(boosterGeo, boosterMat);
+        boosterR.position.set(0.16, -0.05, 0);
+
+        // Booster Nozzles
+        const nozzleGeo = new THREE.CylinderGeometry(0.05, 0.03, 0.1, 16);
+        const nozzleMat = mats.accent;
+        const nozzleL = new THREE.Mesh(nozzleGeo, nozzleMat);
+        nozzleL.position.set(0, -0.16, 0);
+        const nozzleR = new THREE.Mesh(nozzleGeo, nozzleMat);
+        nozzleR.position.set(0, -0.16, 0);
+        boosterL.add(nozzleL);
+        boosterR.add(nozzleR);
+
+        // Nozzle targets for particle emission
+        const jetpackNozzleL = new THREE.Group();
+        jetpackNozzleL.position.set(0, -0.05, 0);
+        nozzleL.add(jetpackNozzleL);
+        const jetpackNozzleR = new THREE.Group();
+        jetpackNozzleR.position.set(0, -0.05, 0);
+        nozzleR.add(jetpackNozzleR);
+
+        // Center Core Details
+        const coreDetailGeo = new THREE.BoxGeometry(0.15, 0.2, 0.15);
+        const jetpackCore = new THREE.Mesh(coreDetailGeo, mats.accent);
+        jetpackCore.position.set(0, 0, 0.08); // Sticks out
+
+        // Wings/Fins
+        const finShape = new THREE.Shape();
+        finShape.moveTo(0, 0);
+        finShape.lineTo(0.15, -0.1);
+        finShape.lineTo(0.15, -0.2);
+        finShape.lineTo(0, -0.05);
+        const finGeo = new THREE.ExtrudeGeometry(finShape, { depth: 0.02, bevelEnabled: true, bevelSize: 0.005 });
+        finGeo.center();
+        const finL = new THREE.Mesh(finGeo, mats.accent);
+        finL.position.set(-0.24, -0.05, 0);
+        const finR = new THREE.Mesh(finGeo, mats.accent);
+        finR.rotation.y = Math.PI;
+        finR.position.set(0.24, -0.05, 0);
+
+        jetpackPivot.add(mainTank, boosterL, boosterR, jetpackCore, finL, finR);
+        upperSpinePivot.add(upperTorso, chestPlate, chestCore, backPlate, jetpackPivot);
 
         const lowerNeckPivot = new THREE.Group();
         lowerNeckPivot.position.set(0, 0.35, 0.04);
@@ -646,6 +703,8 @@ export function setupRacers(textureSet) {
                 headPivot,
                 jawPivot,
                 visorPivot,
+                jetpackNozzleL,
+                jetpackNozzleR,
 
                 leftShoulder: leftArm.shoulderPivot,
                 leftElbow: leftArm.elbowPivot,

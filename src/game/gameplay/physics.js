@@ -163,6 +163,29 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
       racer.heading += racer.steer * 0.26 * dt;
     }
 
+    // --- JETPACK BOOST MECHANICS ---
+    if (racer.isPlayer && input.jetpackActive && racer.jetpackFuel > 0 && game.state === STATE.RACING) {
+      const fuelConsumeRate = 25.0; // 4 seconds of fuel from 100
+      racer.jetpackFuel = Math.max(0, racer.jetpackFuel - fuelConsumeRate * dt);
+
+      const jetpackForce = 38.0;
+      let jetForward = forwardFromHeading(racer.heading);
+
+      if (racer.grounded) {
+        jetForward.copy(forward);
+      } else {
+        tempVec3D.copy(jetForward);
+        tempVec3D.y = Math.sin(-racer.airPitch);
+        const horizScale = Math.cos(-racer.airPitch);
+        tempVec3D.x *= horizScale;
+        tempVec3D.z *= horizScale;
+        jetForward.copy(tempVec3D).normalize();
+      }
+
+      accel.addScaledVector(jetForward, jetpackForce);
+      racer.boostTimer = Math.max(racer.boostTimer, 0.2);
+    }
+
     racer.velocity.addScaledVector(accel, dt);
     if (racer.grounded) {
       const forwardSpeed = racer.velocity.dot(forward);
