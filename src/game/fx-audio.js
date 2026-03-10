@@ -46,14 +46,23 @@ export function createFxAudioSystem({ settings }) {
 
             const emitJet = (pos, color, scale, ls) => {
               for (let i = 0; i < scale; i++) {
-                const size = 0.05 + Math.random() * 0.05;
-                const mesh = new THREE.Mesh(new THREE.SphereGeometry(size, 8, 8), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }));
+                const size = 0.08 + Math.random() * 0.06;
+                const mat = new THREE.MeshBasicMaterial({
+                  color,
+                  transparent: true,
+                  opacity: 1.0,
+                  blending: THREE.AdditiveBlending,
+                  depthWrite: false
+                });
+                const mesh = new THREE.Mesh(new THREE.SphereGeometry(size, 8, 8), mat);
+
+                // Very compact spawn point
                 mesh.position.copy(pos).add(new THREE.Vector3((Math.random() - 0.5) * bSpr, (Math.random() - 0.5) * bSpr, (Math.random() - 0.5) * bSpr));
 
                 // Tight directional velocity
-                const vel = new THREE.Vector3(throwForward.x * bSpd + (Math.random() - 0.5), throwForward.y * bSpd + (Math.random() - 0.5), throwForward.z * bSpd + (Math.random() - 0.5));
+                const vel = new THREE.Vector3(throwForward.x * bSpd + (Math.random() - 0.5) * 0.5, throwForward.y * bSpd + (Math.random() - 0.5) * 0.5, throwForward.z * bSpd + (Math.random() - 0.5) * 0.5);
                 game.fxRoot.add(mesh);
-                game.particles.push({ mesh, vel, life: ls * (0.5 + Math.random() * 0.5), maxLife: ls, jetpack: true, initialSize: size });
+                game.particles.push({ mesh, vel, life: ls * (0.8 + Math.random() * 0.4), maxLife: ls, jetpack: true, initialSize: size });
               }
             };
 
@@ -91,10 +100,10 @@ export function createFxAudioSystem({ settings }) {
       p.mesh.position.addScaledVector(p.vel, dt);
 
       if (p.jetpack) {
-        // Expand and fade fast
-        const scale = 1.0 + (1.0 - p.life / p.maxLife) * 2.5;
+        // Taper off into a sharp tip like a real flame
+        const scale = Math.max(0.1, p.life / p.maxLife);
         p.mesh.scale.set(scale, scale, scale);
-        p.mesh.material.opacity = Math.pow(p.life / p.maxLife, 1.5);
+        p.mesh.material.opacity = Math.pow(p.life / p.maxLife, 1.2);
       } else {
         p.mesh.material.opacity = p.life / p.maxLife;
       }

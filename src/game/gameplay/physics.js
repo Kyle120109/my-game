@@ -194,6 +194,13 @@ export function createPhysicsSystem({ input, fx, setRaceMessage, tempVec3A, temp
 
       // Keep a small acceleration for physics solver stability
       accel.addScaledVector(jetForward, jetpackForce * 0.2);
+
+      if (!racer.grounded) {
+        // Add significant upward lift while airborne so player ascends instead of falling
+        racer.velocity.y += 24.0 * dt;
+        if (racer.velocity.y > 12.0) racer.velocity.y = 12.0; // Terminal upward speed
+      }
+
       racer.boostTimer = Math.max(racer.boostTimer, 0.4); // Forces FOV/Blur effects
     } else if (racer.isPlayer && (!input.jetpackActive || racer.jetpackFuel <= 0) && game.state === STATE.RACING) {
       const fuelRechargeRate = 12.0;
